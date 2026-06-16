@@ -1,0 +1,17 @@
+# Archive files
+*.zip
+
+# Dependency directories
+node_modules/
+vendor/
+
+# Build directories
+.nuxt/
+dist/
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

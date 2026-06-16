@@ -1,0 +1,60 @@
+.card-player {
+  min-width: 250px;
+  max-width: 250px;
+  max-height: 97px;
+  min-height: 97px;
+  padding: 8px;
+  margin: 8px 0px;
+  border: 3px solid white;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.min-h34 {
+  min-height: 34px;
+}
+
+.vertical-line {
+  position: relative;
+  width: 50px;
+  border-top: 2px solid white;
+  border-top-right-radius: 10px;
+}
+
+.horizontal-line {
+  position: relative;
+  height: 105px;
+  border-right: 2px solid white;
+  /* border-radius: 8px; */
+}
+
+.horizontal-r2-line {
+  position: relative;
+  height: 218px;
+  border-right: 2px solid white;
+}
+
+.horizontal-r3-line {
+  position: relative;
+  height: 264px;
+  border-right: 2px solid white;
+}
+
+.horizontal-r4-line {
+  position: relative;
+  height: 376px;
+  border-right: 2px solid white;
+}
+
+.horizontal-r5-line {
+  position: relative;
+  height: 432px;
+  border-right: 2px solid white;
+}
+
+.vertical-next-line {
+  position: relative;
+  width: 80px;
+  border-top: 2px solid white;
+}

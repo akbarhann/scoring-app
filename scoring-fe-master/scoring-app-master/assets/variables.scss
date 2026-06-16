@@ -1,0 +1,104 @@
+// Ref: https://github.com/nuxt-community/vuetify-module#customvariables
+//
+// The variables you want to modify
+// $font-size-root: 20px;
+
+// Globals
+$body-font-family: 'Poppins' !default;
+
+// $headings: (
+//   'subtitle-1': (
+//     'size': 1.563rem,
+//     'weight': 600,
+//     'line-height': 2.313rem,
+//     'letter-spacing': 0.009375em,
+//     'font-family': $body-font-family,
+//     'text-transform': false,
+//   ),
+//   'subtitle-2': (
+//     'size': 1.375rem,
+//     'weight': 500,
+//     'line-height': 2.063rem,
+//     'letter-spacing': 0.0071428571em,
+//     'font-family': $body-font-family,
+//     'text-transform': false,
+//   ),
+//   'body-1': (
+//     'size': 1.375rem,
+//     'weight': 400,
+//     'line-height': 2.063rem,
+//     'letter-spacing': 0.03125em,
+//     'font-family': $body-font-family,
+//     'text-transform': false,
+//   ),
+//   'body-2': (
+//     'size': 1.25rem,
+//     'weight': 400,
+//     'line-height': 1.8rem,
+//     'letter-spacing': 0.0178571429em,
+//     'font-family': $body-font-family,
+//     'text-transform': false,
+//   ),
+// );
+
+$material-light: (
+  'text': (
+    'theme': '#5A5A5A',
+    'primary': '#000000',
+    'primary2': '#5A5A5A',
+    'primary3': '#393939',
+    'secondary': '#FFFFFF',
+    'secondary2': '#DBA11C',
+    'secondary3': '#6BAB0E',
+    'link': '#3C608F',
+    'link-hover': '#3C608F',
+  ),
+);
+
+$border-radius-root: 8px;
+
+$grid-breakpoints: (
+  'xs': 0,
+  'sm': 600px,
+  'md': 960px,
+  'lg': 1280px - 16px,
+  'xl': 1920px - 16px,
+);
+
+// $container-max-widths: (
+//   'md': map-get($grid-breakpoints, 'md') * 0.9375,
+//   'lg': map-get($grid-breakpoints, 'lg') * 0.9375,
+//   'xl': map-get($grid-breakpoints, 'lg') * 0.9375,
+// );
+
+// Button
+$btn-border-radius: 24px;
+$btn-hover-opacity: 0.3;
+$btn-focus-opacity: 0;
+$btn-active-opacity: 0;
+$btn-letter-spacing: 0.5;
+$btn-text-transform: none;
+$btn-sizes: (
+  'x-small': 34,
+  'small': 38,
+  'default': 44,
+  'large': 51,
+  'x-large': 56,
+);
+
+$btn-font-sizes: (
+  'x-small': 1rem,
+  'small': 1rem,
+  'default': 1rem,
+  'large': 1rem,
+  'x-large': 1.25rem,
+);
+
+// List
+$list-item-title-font-size: 16px;
+
+// Dialog
+$dialog-max-height: 100%;
+
+// Snackbar
+$snackbar-content-font-size: 16px;
