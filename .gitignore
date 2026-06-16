@@ -5,13 +5,26 @@
 node_modules/
 vendor/
 
-# Build directories
+# Build outputs
 .nuxt/
 dist/
+/public/storage
+/storage/*.key
 
 # Local env files
 .env
+.env.backup
+.env.production
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Logs and lock files
+npm-debug.log
+yarn-error.log
+composer.lock
+
+# IDE settings
+/.idea
+/.vscode
