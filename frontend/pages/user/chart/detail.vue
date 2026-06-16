@@ -358,28 +358,22 @@ div >>> .vtb-item-players {
     size: landscape;
     margin: 10mm;
   }
-  body {
+  body, html, #__nuxt, #__layout, .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-container {
     background-color: #ffffff !important;
     color: #000000 !important;
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    min-height: auto !important;
+    width: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   .card-dashboard,
   .icon-win,
   .v-btn {
     display: none !important;
-  }
-  .v-application {
-    background: none !important;
-  }
-  .v-application--wrap {
-    min-height: auto !important;
-  }
-  .v-main {
-    padding: 0 !important;
-    background: none !important;
-  }
-  .v-container {
-    max-width: none !important;
-    padding: 0 !important;
   }
   .card-dashboard-bracket {
     display: block !important;
@@ -396,8 +390,8 @@ div >>> .vtb-item-players {
   h5 {
     color: #000000 !important;
   }
-  .vtb-item-child:has(.player-hidden) {
-    display: none !important;
+  .player-hidden {
+    visibility: hidden !important;
   }
 }
 </style>
