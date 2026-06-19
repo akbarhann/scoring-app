@@ -98,6 +98,18 @@
             <v-icon left size="18" class="mr-1">mdi-printer</v-icon>
             Print All
           </v-btn>
+          <!-- Generate Link Button -->
+          <v-btn
+            v-if="tournament"
+            x-small
+            color="teal darken-1"
+            class="px-4 rounded-8 align-self-center white--text font-weight-semi text-capitalize"
+            style="height: 38px;"
+            @click="generateRosterLink()"
+          >
+            <v-icon left size="18" class="mr-1">mdi-link-variant</v-icon>
+            Generate Link
+          </v-btn>
         </div>
       </div>
     </div>
@@ -214,6 +226,42 @@
           <v-btn text color="grey lighten-1" @click="dialogDeleteTournament = false">Batal</v-btn>
           <v-btn color="red darken-4" class="px-6 rounded-lg font-weight-bold white--text" :loading="loadingDeleteTournament" @click="deleteTournamentConfirm">
             Hapus
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Roster Link Dialog -->
+    <v-dialog v-model="rosterLinkDialog" max-width="560px">
+      <v-card class="pa-5" style="background: #1e1e1e; border-radius: 14px;">
+        <v-card-title class="white--text font-weight-semi text-16 pb-2 px-0">
+          <v-icon color="teal" class="mr-2">mdi-link-variant</v-icon>
+          Link Daftar Peserta
+        </v-card-title>
+        <v-card-text class="px-0 pt-2 pb-3">
+          <p class="grey--text text-14 mb-3">Salin link di bawah ini dan bagikan. Halaman ini terbuka secara publik dan menampilkan seluruh peserta dalam turnamen beserta status pertandingannya.</p>
+          <div class="d-flex align-center" style="gap: 8px;">
+            <v-text-field
+              v-model="rosterLink"
+              readonly
+              outlined
+              dense
+              hide-details
+              dark
+              class="roster-link-field"
+              style="font-size: 13px;"
+            ></v-text-field>
+            <v-btn color="teal darken-1" class="white--text rounded-8 px-4" @click="copyRosterLink">
+              <v-icon size="18" class="mr-1">mdi-content-copy</v-icon>
+              Salin
+            </v-btn>
+          </div>
+        </v-card-text>
+        <v-card-actions class="justify-end px-0 pb-0">
+          <v-btn text color="grey" @click="rosterLinkDialog = false">Tutup</v-btn>
+          <v-btn color="teal darken-1" class="white--text rounded-8 px-4" :href="rosterLink" target="_blank">
+            <v-icon size="16" class="mr-1">mdi-open-in-new</v-icon>
+            Buka
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -341,6 +389,10 @@ export default {
       notif: false,
       notifColor: 'dark',
       notifMsg: '',
+
+      // Roster link
+      rosterLinkDialog: false,
+      rosterLink: '',
 
       // Print settings variables
       loadingPrintAll: false,
@@ -593,6 +645,25 @@ export default {
         }
       }
       localStorage.setItem('liveBracket', JSON.stringify(local))
+    },
+
+    generateRosterLink() {
+      const base = window.location.origin;
+      this.rosterLink = `${base}/bracket-roster?tournament_id=${this.tournament}`;
+      this.rosterLinkDialog = true;
+    },
+
+    async copyRosterLink() {
+      try {
+        await navigator.clipboard.writeText(this.rosterLink);
+        this.notif = true;
+        this.notifColor = 'success';
+        this.notifMsg = 'Link berhasil disalin!';
+      } catch (e) {
+        this.notif = true;
+        this.notifColor = 'error';
+        this.notifMsg = 'Gagal menyalin link.';
+      }
     },
 
     loadHtml2Pdf() {

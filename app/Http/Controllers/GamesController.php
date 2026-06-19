@@ -304,4 +304,68 @@ class GamesController extends Controller
             ], 500);
         }
     }
+
+    public function participants()
+    {
+        try {
+            $tournament_id = $_GET['tournament_id'];
+            $tournament = Tournament::where('id', '=', $tournament_id)->first();
+
+            if (!$tournament) {
+                return Response::json(['error' => 'Tournament not found'], 404);
+            }
+
+            // Get all categories for this tournament
+            $categories = Category::where('tournament_id', '=', $tournament_id)->get();
+
+            $rows = [];
+            foreach ($categories as $category) {
+                // Get all charts (match entries) for this category
+                $charts = Chart::where('category_id', '=', $category->id)
+                    ->whereNotNull('red_name')
+                    ->orderBy('match_number', 'ASC')
+                    ->get();
+
+                foreach ($charts as $chart) {
+                    // Add red athlete if not BYE
+                    if ($chart->red_name && $chart->red_name !== 'BYE') {
+                        $rows[] = [
+                            'category_id'   => $category->id,
+                            'category_name' => $category->category_name,
+                            'match_number'  => $chart->match_number,
+                            'athlete_name'  => $chart->red_name,
+                            'dojo'          => $chart->red_club,
+                            'corner'        => 'Merah',
+                            'status'        => $chart->play_now == 2 ? 'Selesai' : ($chart->play_now == 1 ? 'Sedang Bertanding' : 'Menunggu'),
+                            'winner'        => ($chart->play_now == 2 && $chart->winner == 1) ? true : null,
+                        ];
+                    }
+                    // Add blue athlete if not BYE
+                    if ($chart->blue_name && $chart->blue_name !== 'BYE') {
+                        $rows[] = [
+                            'category_id'   => $category->id,
+                            'category_name' => $category->category_name,
+                            'match_number'  => $chart->match_number,
+                            'athlete_name'  => $chart->blue_name,
+                            'dojo'          => $chart->blue_club,
+                            'corner'        => 'Biru',
+                            'status'        => $chart->play_now == 2 ? 'Selesai' : ($chart->play_now == 1 ? 'Sedang Bertanding' : 'Menunggu'),
+                            'winner'        => ($chart->play_now == 2 && $chart->winner == 2) ? true : null,
+                        ];
+                    }
+                }
+            }
+
+            return Response::json([
+                'tournament' => $tournament,
+                'data'       => $rows,
+                'status_code'=> 200
+            ], 200);
+        } catch (Exception $e) {
+            return Response::json([
+                'error'   => 'Fail get participants',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

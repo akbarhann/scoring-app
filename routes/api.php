@@ -40,3 +40,5 @@ Route::get('/bracket/detail', [BracketController::class, 'detail'])->name('brack
 Route::post('/save-bracket', [BracketController::class, 'saveBracket'])->name('bracket_save');
 Route::post('/edit-bracket', [BracketController::class, 'editBracket'])->name('bracket_edit');
 Route::post('/tournament/delete', [ItemSelect::class, 'deleteTournament'])->name('tournament_delete');
+Route::get('/tournament/participants', [GamesController::class, 'participants'])->name('tournament_participants');
+Route::get('/tournament/detail', [ItemSelect::class, 'tournamentDetail'])->name('tournament_detail');

@@ -94,4 +94,20 @@ class ItemSelect extends Controller
             ], 500);
         }
     }
+
+    public function tournamentDetail()
+    {
+        try {
+            $tournament = Tournament::where('id', '=', $_GET['id'])->first();
+            return Response::json([
+                'data'        => $tournament,
+                'status_code' => 200
+            ], 200);
+        } catch (Exception $e) {
+            return Response::json([
+                'error'   => 'Fail get tournament detail',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
