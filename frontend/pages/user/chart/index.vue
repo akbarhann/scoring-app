@@ -599,28 +599,42 @@ export default {
       try {
         const fetchedBrackets = [];
         for (const cat of this.charts) {
-          const detailUrl = `/api/bracket/detail?id=${cat.id}`;
-          const res = await this.$axios.get(detailUrl);
-          if (res.data && res.data.data && res.data.data.brackets) {
-            const bracketData = JSON.parse(res.data.data.brackets);
+          try {
+            const detailUrl = `/api/bracket/detail?id=${cat.id}`;
+            const res = await this.$axios.get(detailUrl);
             
-            // Preprocess players hidden / getBye status
-            bracketData.forEach((dat, i) => {
-              dat.games.forEach((g, index) => {
-                g.player1.match = i;
-                g.player1.index = index;
-                g.player1.setting = true;
-                g.player1.hidden = g.player1.name === 'BYE';
+            // Safe unwrap of Axios response or direct payload
+            const payload = res && res.data ? res.data : res;
+            if (payload && payload.data && payload.data.brackets) {
+              const bracketData = JSON.parse(payload.data.brackets);
+              
+              if (Array.isArray(bracketData)) {
+                // Preprocess players hidden / getBye status
+                bracketData.forEach((dat, i) => {
+                  if (dat && Array.isArray(dat.games)) {
+                    dat.games.forEach((g, index) => {
+                      if (g && g.player1) {
+                        g.player1.match = i;
+                        g.player1.index = index;
+                        g.player1.setting = true;
+                        g.player1.hidden = g.player1.name === 'BYE';
 
-                const opp = bracketData[i].games[index + 1];
-                g.player1.isGetBye = opp?.player1?.name === 'BYE';
-              })
-            });
+                        const opp = dat.games[index + 1];
+                        g.player1.isGetBye = opp?.player1?.name === 'BYE';
+                      }
+                    });
+                  }
+                });
 
-            fetchedBrackets.push({
-              categoryName: cat.category_name,
-              bracket: bracketData
-            });
+                fetchedBrackets.push({
+                  categoryName: cat.category_name,
+                  bracket: bracketData
+                });
+              }
+            }
+          } catch (itemErr) {
+            // eslint-disable-next-line no-console
+            console.error(`Gagal memuat kategori ${cat.category_name}:`, itemErr);
           }
         }
         
@@ -634,6 +648,8 @@ export default {
         this.printBracketsList = fetchedBrackets;
         this.printDialog = true;
       } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Error print all:', err);
         this.notif = true;
         this.notifColor = 'error';
         this.notifMsg = 'Gagal memuat detail bagan untuk pencetakan.';
