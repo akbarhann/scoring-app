@@ -1,8 +1,18 @@
 <template>
   <div class="my-4">
-    <p class="text-center text-20 height-28 font-weight-bold mb-0">
-      {{ title }}
-    </p>
+    <div class="pos-relative">
+      <p class="text-center text-20 height-28 font-weight-bold mb-0">
+        {{ title }}
+      </p>
+      <v-btn
+        icon
+        dark
+        class="fullscreen-toggle"
+        @click="toggleFullscreen"
+      >
+        <v-icon>{{ isFullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen' }}</v-icon>
+      </v-btn>
+    </div>
     <h3 class="text-center mb-8">{{ category }}</h3>
 
     <div class="d-flex justify-space-between">
@@ -251,6 +261,7 @@ export default {
   middleware: 'login',
   data() {
     return {
+      isFullscreen: false,
       title: 'Tournament',
       category: 'Category',
 
@@ -315,8 +326,26 @@ export default {
       this.getBlueTime()
       this.getOsaikomiTime()
     }, 100)
+
+    document.addEventListener('fullscreenchange', this.onFullscreenChange);
+  },
+  beforeDestroy() {
+    document.removeEventListener('fullscreenchange', this.onFullscreenChange);
   },
   methods: {
+    onFullscreenChange() {
+      this.isFullscreen = !!document.fullscreenElement;
+    },
+    toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          // eslint-disable-next-line no-console
+          console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    },
     getRed() {
       let local = localStorage.getItem('fightingRed')
       if (local != null) {
@@ -522,6 +551,13 @@ hr {
 }
 .border-right {
   border-right: 1px solid white;
+}
+
+.fullscreen-toggle {
+  position: absolute !important;
+  top: 10px;
+  right: 16px;
+  z-index: 100 !important;
 }
 </style>
 

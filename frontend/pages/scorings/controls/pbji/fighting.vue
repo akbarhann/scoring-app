@@ -1,8 +1,18 @@
 <template>
   <div ref="controlFighting" @click="controlOsaikomi">
-    <p class="text-center text-20 height-30 font-weight-semi mb-0">
-      Control Score Fighting
-    </p>
+    <div class="pos-relative">
+      <p class="text-center text-20 height-30 font-weight-semi mb-0">
+        Control Score Fighting
+      </p>
+      <v-btn
+        icon
+        dark
+        class="fullscreen-toggle"
+        @click="toggleFullscreen"
+      >
+        <v-icon>{{ isFullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen' }}</v-icon>
+      </v-btn>
+    </div>
     <h4 class="text-center mb-10">{{ categoryName }}</h4>
     <div class="d-flex justify-space-between">
       <!-- Red Corner -->
@@ -1263,6 +1273,7 @@ export default {
   // components: { WinnerDialogVue },
   data() {
     return {
+      isFullscreen: false,
       dataMain: {
         martial_id: null,
         tournament_id: null,
@@ -1476,11 +1487,30 @@ export default {
     }
     this.getParticipant()
 
-    window.addEventListener('keyup', (event) => {
-      this.controlOsaikomi(event);
-    });
+    window.addEventListener('keyup', this.handleKeyup);
+    document.addEventListener('fullscreenchange', this.onFullscreenChange);
+  },
+  beforeDestroy() {
+    window.removeEventListener('keyup', this.handleKeyup);
+    document.removeEventListener('fullscreenchange', this.onFullscreenChange);
   },
   methods: {
+    handleKeyup(event) {
+      this.controlOsaikomi(event);
+    },
+    onFullscreenChange() {
+      this.isFullscreen = !!document.fullscreenElement;
+    },
+    toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          // eslint-disable-next-line no-console
+          console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    },
     setTime(t) {
       const local = {
         time: t,
@@ -2709,5 +2739,12 @@ hr {
 
 .card-dashboard {
   max-width: 100%;
+}
+
+.fullscreen-toggle {
+  position: absolute !important;
+  top: 10px;
+  right: 16px;
+  z-index: 100 !important;
 }
 </style>
