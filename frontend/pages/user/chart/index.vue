@@ -294,14 +294,14 @@
       </v-card>
     </v-dialog>
 
-    <!-- Hidden Print All Container -->
-    <div id="allBracketsPrintData" class="print-all-only">
-      <div v-for="(category, cIdx) in printBracketsList" :key="'print-all-' + cIdx" class="bracket-page-break">
+    <!-- Hidden Print Container for Single/Sequential Printing -->
+    <div id="singleBracketPrintData" class="print-all-only">
+      <div v-if="activePrintCategory" class="bracket-page-break">
         <div class="bracket-print-title">
-          {{ category.categoryName }}
+          {{ activePrintCategory.categoryName }}
         </div>
         <client-only>
-          <bracket :rounds="category.bracket">
+          <bracket :rounds="activePrintCategory.bracket">
             <template slot="player" slot-scope="{ player }">
               <p class="bg-white mb-0 pa-0" :class="{ 'player-hidden': player.hidden, 'player-get-bye': player.isGetBye }">
                 {{ player.name }}
@@ -346,6 +346,7 @@ export default {
       loadingPrintAll: false,
       printDialog: false,
       printBracketsList: [],
+      activePrintCategory: null,
       printSettings: {
         orientation: 'landscape',
         paperSize: 'A4',
@@ -660,46 +661,66 @@ export default {
       }
     },
 
-    confirmPrint() {
+    async confirmPrint() {
+      this.printDialog = false;
+      document.body.classList.add('printing-all-active');
+
+      for (let i = 0; i < this.printBracketsList.length; i++) {
+        const category = this.printBracketsList[i];
+        this.activePrintCategory = category;
+
+        // Wait for Vue to update the DOM with the active category
+        await this.$nextTick();
+
+        // Wait a short moment to ensure everything is mounted and calculated
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        const existingStyle = document.getElementById('print-dynamic-style');
+        if (existingStyle) {
+          existingStyle.remove();
+        }
+
+        const style = document.createElement('style');
+        style.id = 'print-dynamic-style';
+
+        let scaleCss = '';
+        if (this.printSettings.scale !== 100) {
+          const scaleVal = this.printSettings.scale / 100;
+          scaleCss = `
+            #singleBracketPrintData {
+              transform: scale(${scaleVal}) !important;
+              transform-origin: top center !important;
+              width: ${100 / scaleVal}% !important;
+            }
+          `;
+        }
+
+        style.innerHTML = `
+          @media print {
+            @page {
+              size: ${this.printSettings.paperSize} ${this.printSettings.orientation} !important;
+              margin: ${this.printSettings.margin} !important;
+            }
+            ${scaleCss}
+          }
+        `;
+        document.head.appendChild(style);
+
+        // Open print dialog
+        window.print();
+
+        // Wait for user to interact with the print dialog before setting the next one
+        await new Promise((resolve) => setTimeout(resolve, 800));
+      }
+
+      // Cleanup
+      document.body.classList.remove('printing-all-active');
+      this.activePrintCategory = null;
+
       const existingStyle = document.getElementById('print-dynamic-style');
       if (existingStyle) {
         existingStyle.remove();
       }
-
-      const style = document.createElement('style');
-      style.id = 'print-dynamic-style';
-
-      let scaleCss = '';
-      if (this.printSettings.scale !== 100) {
-        const scaleVal = this.printSettings.scale / 100;
-        scaleCss = `
-          #allBracketsPrintData {
-            transform: scale(${scaleVal}) !important;
-            transform-origin: top center !important;
-            width: ${100 / scaleVal}% !important;
-          }
-        `;
-      }
-
-      style.innerHTML = `
-        @media print {
-          @page {
-            size: ${this.printSettings.paperSize} ${this.printSettings.orientation} !important;
-            margin: ${this.printSettings.margin} !important;
-          }
-          ${scaleCss}
-        }
-      `;
-      document.head.appendChild(style);
-
-      document.body.classList.add('printing-all-active');
-
-      this.printDialog = false;
-      setTimeout(() => {
-        window.print();
-        // Clean up
-        document.body.classList.remove('printing-all-active');
-      }, 500);
     },
   },
 }
