@@ -41,6 +41,15 @@
             <v-icon class="text-18 mr-2">mdi-tray-arrow-up</v-icon>
             Import Category
           </v-btn>
+          <v-btn
+            x-small
+            color="primaryred"
+            class="rounded-8 align-self-center text-14 height-20 white--text font-weight-bold"
+            @click="$router.push('/user/chart/magic')"
+          >
+            <v-icon class="text-18 mr-2" color="white">mdi-auto-fix</v-icon>
+            Magic Bracket
+          </v-btn>
           <!-- <v-btn
             x-small
             class="rounded-8 align-self-center text-14 height-20"

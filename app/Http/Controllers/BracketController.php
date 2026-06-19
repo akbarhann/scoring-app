@@ -14,10 +14,14 @@ use Illuminate\Support\Facades\Response;
 class BracketController extends Controller
 {
     //
-    public function bracket()
+    public function bracket(Request $request)
     {
         try {
-            $chart = Category::where('has_bracket', '=', 1)->get();
+            $query = Category::where('has_bracket', '=', 1);
+            if ($request->has('tournament_id')) {
+                $query->where('tournament_id', '=', $request->tournament_id);
+            }
+            $chart = $query->get();
             return Response::json([
                 'data' => $chart,
                 'status_code' => 200
@@ -64,10 +68,15 @@ class BracketController extends Controller
         if ($request->tournament_id != null) {
             $tournament = Tournament::where('id', '=', $request->tournament_id)->first();
         } else {
-            $tournament = Tournament::create([
-                'martial_id' => $request->martial_id,
-                'tournament_name' => $request->tournament_name,
-            ]);
+            $tournament = Tournament::where('martial_id', $request->martial_id)
+                                    ->where('tournament_name', $request->tournament_name)
+                                    ->first();
+            if (!$tournament) {
+                $tournament = Tournament::create([
+                    'martial_id' => $request->martial_id,
+                    'tournament_name' => $request->tournament_name,
+                ]);
+            }
         }
 
         $category = Category::create([
@@ -112,6 +121,7 @@ class BracketController extends Controller
 
         return Response::json([
             'message' => 'Data berhasil ditambahkan',
+            'tournament_id' => $tournament->id,
             'status_code' => 200
         ], 200);
     }
