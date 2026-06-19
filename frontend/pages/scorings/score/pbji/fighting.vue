@@ -423,13 +423,19 @@ export default {
 @import '~/assets/styles.css';
 
 .corner {
-  width: 555px;
+  width: 48%;
+  max-width: 555px;
+  flex: 1 1 auto;
 }
 .time-corner {
-  width: 440px;
+  width: 38%;
+  max-width: 440px;
+  flex: 1 1 auto;
 }
 .time-corner-mid {
-  width: 225px;
+  width: 20%;
+  max-width: 225px;
+  flex: 1 1 auto;
 }
 .red-corner {
   min-width: 100%;
@@ -500,7 +506,9 @@ hr {
   z-index: 10 !important;
 }
 .main-timer {
-  width: 545px;
+  width: 48%;
+  max-width: 545px;
+  flex: 1 1 auto;
   border-radius: 20px;
   background: linear-gradient(115.41deg, #ff001e, #0048ff);
   padding: 4px;
@@ -511,7 +519,9 @@ hr {
 }
 
 .sponsor {
-  width: 570px;
+  width: 48%;
+  max-width: 570px;
+  flex: 1 1 auto;
   max-height: 140px;
   background: #ffffff;
   border-radius: 20px;
@@ -522,6 +532,128 @@ hr {
 }
 .border-right {
   border-right: 1px solid white;
+}
+
+/* Height-based media query for smaller viewports (height <= 850px) */
+@media screen and (max-height: 850px) {
+  h3 {
+    font-size: 32px !important;
+    line-height: 40px !important;
+    margin-bottom: 12px !important;
+  }
+  h4 {
+    font-size: 26px !important;
+    line-height: 32px !important;
+  }
+  .text-20 {
+    font-size: 16px !important;
+    line-height: 20px !important;
+  }
+  .mb-8 {
+    margin-bottom: 12px !important;
+  }
+  .mt-5 {
+    margin-top: 12px !important;
+  }
+  .mt-10 {
+    margin-top: 12px !important;
+  }
+  
+  .blue-corner, .red-corner, .redblue-corner {
+    padding: 12px !important;
+  }
+  
+  .text-score {
+    font-size: 45px !important;
+    line-height: 45px !important;
+  }
+  .text-score-main {
+    font-size: 60px !important;
+    line-height: 60px !important;
+  }
+  .text-timer {
+    font-size: 70px !important;
+    line-height: 70px !important;
+  }
+  .text-timer-medic {
+    font-size: 35px !important;
+    line-height: 35px !important;
+  }
+  
+  .penalties, .point {
+    padding: 8px !important;
+  }
+  
+  .sponsor {
+    height: 100px !important;
+    max-height: 100px !important;
+  }
+  .v-carousel, .v-carousel-item, .v-image {
+    height: 90px !important;
+    max-height: 90px !important;
+  }
+}
+
+/* Even more compact for very small heights (e.g. tablet height 650px) */
+@media screen and (max-height: 700px) {
+  h3 {
+    font-size: 24px !important;
+    line-height: 30px !important;
+    margin-bottom: 6px !important;
+  }
+  h4 {
+    font-size: 20px !important;
+    line-height: 24px !important;
+  }
+  .text-20 {
+    font-size: 13px !important;
+    line-height: 16px !important;
+  }
+  .mb-8 {
+    margin-bottom: 6px !important;
+  }
+  .mt-5 {
+    margin-top: 6px !important;
+  }
+  .mt-10 {
+    margin-top: 6px !important;
+  }
+  
+  .blue-corner, .red-corner, .redblue-corner {
+    padding: 8px !important;
+  }
+  
+  .text-score {
+    font-size: 30px !important;
+    line-height: 30px !important;
+  }
+  .text-score-main {
+    font-size: 45px !important;
+    line-height: 45px !important;
+  }
+  .text-timer {
+    font-size: 50px !important;
+    line-height: 50px !important;
+  }
+  .text-timer-medic {
+    font-size: 26px !important;
+    line-height: 26px !important;
+  }
+  
+  .penalties, .point {
+    padding: 4px !important;
+    border-radius: 12px !important;
+  }
+  
+  .sponsor {
+    height: 70px !important;
+    max-height: 70px !important;
+    border-radius: 12px !important;
+  }
+  .v-carousel, .v-carousel-item, .v-image {
+    height: 60px !important;
+    max-height: 60px !important;
+  }
 }
 </style>
 
