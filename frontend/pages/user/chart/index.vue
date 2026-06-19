@@ -601,14 +601,36 @@ export default {
         for (const cat of this.charts) {
           const detailUrl = `/api/bracket/detail?id=${cat.id}`;
           const res = await this.$axios.get(detailUrl);
-          if (res.data && res.data.data) {
+          if (res.data && res.data.data && res.data.data.brackets) {
             const bracketData = JSON.parse(res.data.data.brackets);
+            
+            // Preprocess players hidden / getBye status
+            bracketData.forEach((dat, i) => {
+              dat.games.forEach((g, index) => {
+                g.player1.match = i;
+                g.player1.index = index;
+                g.player1.setting = true;
+                g.player1.hidden = g.player1.name === 'BYE';
+
+                const opp = bracketData[i].games[index + 1];
+                g.player1.isGetBye = opp?.player1?.name === 'BYE';
+              })
+            });
+
             fetchedBrackets.push({
               categoryName: cat.category_name,
               bracket: bracketData
             });
           }
         }
+        
+        if (fetchedBrackets.length === 0) {
+          this.notif = true;
+          this.notifColor = 'warning';
+          this.notifMsg = 'Belum ada bagan yang disimpan untuk turnamen ini.';
+          return;
+        }
+
         this.printBracketsList = fetchedBrackets;
         this.printDialog = true;
       } catch (err) {
