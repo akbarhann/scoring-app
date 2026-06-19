@@ -595,6 +595,20 @@ export default {
       localStorage.setItem('liveBracket', JSON.stringify(local))
     },
 
+    loadHtml2Pdf() {
+      return new Promise((resolve, reject) => {
+        if (window.html2pdf) {
+          resolve(window.html2pdf);
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.onload = () => resolve(window.html2pdf);
+        script.onerror = (err) => reject(err);
+        document.head.appendChild(script);
+      });
+    },
+
     async printAll() {
       if (this.charts.length === 0) return;
       this.loadingPrintAll = true;
@@ -663,63 +677,67 @@ export default {
 
     async confirmPrint() {
       this.printDialog = false;
-      document.body.classList.add('printing-all-active');
+      this.loadingPrintAll = true;
 
-      for (let i = 0; i < this.printBracketsList.length; i++) {
-        const category = this.printBracketsList[i];
-        this.activePrintCategory = category;
+      try {
+        const html2pdf = await this.loadHtml2Pdf();
+        document.body.classList.add('printing-all-active');
 
-        // Wait for Vue to update the DOM with the active category
-        await this.$nextTick();
+        for (let i = 0; i < this.printBracketsList.length; i++) {
+          const category = this.printBracketsList[i];
+          this.activePrintCategory = category;
 
-        // Wait a short moment to ensure everything is mounted and calculated
-        await new Promise((resolve) => setTimeout(resolve, 300));
+          // Wait for Vue to update the DOM with the active category
+          await this.$nextTick();
 
-        const existingStyle = document.getElementById('print-dynamic-style');
-        if (existingStyle) {
-          existingStyle.remove();
+          // Wait a short moment to ensure everything is mounted and calculated
+          await new Promise((resolve) => setTimeout(resolve, 400));
+
+          const element = document.getElementById('singleBracketPrintData');
+          if (!element) continue;
+
+          // Convert margin to numeric
+          const marginNum = parseInt(this.printSettings.margin) || 0;
+
+          // Calculate scale (multiply by 2 for high definition/crisp output)
+          const scaleVal = (this.printSettings.scale / 100) * 2;
+
+          const opt = {
+            margin: marginNum,
+            filename: `${category.categoryName}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+              scale: scaleVal,
+              useCORS: true,
+              backgroundColor: '#ffffff'
+            },
+            jsPDF: {
+              unit: 'mm',
+              format: this.printSettings.paperSize.toLowerCase(),
+              orientation: this.printSettings.orientation
+            }
+          };
+
+          // Save the PDF directly
+          await html2pdf().set(opt).from(element).save();
+
+          // Short pause before starting the next one to avoid bottlenecking the browser
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
 
-        const style = document.createElement('style');
-        style.id = 'print-dynamic-style';
-
-        let scaleCss = '';
-        if (this.printSettings.scale !== 100) {
-          const scaleVal = this.printSettings.scale / 100;
-          scaleCss = `
-            #singleBracketPrintData {
-              transform: scale(${scaleVal}) !important;
-              transform-origin: top center !important;
-              width: ${100 / scaleVal}% !important;
-            }
-          `;
-        }
-
-        style.innerHTML = `
-          @media print {
-            @page {
-              size: ${this.printSettings.paperSize} ${this.printSettings.orientation} !important;
-              margin: ${this.printSettings.margin} !important;
-            }
-            ${scaleCss}
-          }
-        `;
-        document.head.appendChild(style);
-
-        // Open print dialog
-        window.print();
-
-        // Wait for user to interact with the print dialog before setting the next one
-        await new Promise((resolve) => setTimeout(resolve, 800));
-      }
-
-      // Cleanup
-      document.body.classList.remove('printing-all-active');
-      this.activePrintCategory = null;
-
-      const existingStyle = document.getElementById('print-dynamic-style');
-      if (existingStyle) {
-        existingStyle.remove();
+        this.notif = true;
+        this.notifColor = 'success';
+        this.notifMsg = 'Semua file PDF berhasil diunduh!';
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Error generating PDF:', err);
+        this.notif = true;
+        this.notifColor = 'error';
+        this.notifMsg = 'Gagal mengunduh file PDF.';
+      } finally {
+        document.body.classList.remove('printing-all-active');
+        this.activePrintCategory = null;
+        this.loadingPrintAll = false;
       }
     },
   },
