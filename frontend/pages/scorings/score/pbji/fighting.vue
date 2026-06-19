@@ -1,5 +1,5 @@
 <template>
-  <div class="scoring-container my-4">
+  <div class="my-4">
     <p class="text-center text-20 height-28 font-weight-bold mb-0">
       {{ title }}
     </p>
@@ -422,11 +422,6 @@ export default {
 <style scoped>
 @import '~/assets/styles.css';
 
-.scoring-container {
-  width: 1220px;
-  margin: 0 auto;
-}
-
 .corner {
   width: 555px;
 }
@@ -527,45 +522,6 @@ hr {
 }
 .border-right {
   border-right: 1px solid white;
-}
-
-/* Responsive Zoom based on viewport height */
-@media screen and (max-height: 950px) {
-  .scoring-container {
-    zoom: 0.88;
-  }
-}
-@media screen and (max-height: 850px) {
-  .scoring-container {
-    zoom: 0.80;
-  }
-}
-@media screen and (max-height: 750px) {
-  .scoring-container {
-    zoom: 0.72;
-  }
-}
-@media screen and (max-height: 680px) {
-  .scoring-container {
-    zoom: 0.65;
-  }
-}
-@media screen and (max-height: 600px) {
-  .scoring-container {
-    zoom: 0.58;
-  }
-}
-
-/* Responsive Zoom based on viewport width */
-@media screen and (max-width: 1300px) {
-  .scoring-container {
-    zoom: 0.85;
-  }
-}
-@media screen and (max-width: 1100px) {
-  .scoring-container {
-    zoom: 0.70;
-  }
 }
 </style>
 

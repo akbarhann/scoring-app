@@ -1,5 +1,5 @@
 <template>
-  <div ref="controlFighting" class="scoring-container" @click="controlOsaikomi">
+  <div ref="controlFighting" @click="controlOsaikomi">
     <p class="text-center text-20 height-30 font-weight-semi mb-0">
       Control Score Fighting
     </p>
@@ -2614,11 +2614,6 @@ export default {
 <style scoped>
 @import '~/assets/styles.css';
 
-.scoring-container {
-  width: 1140px;
-  margin: 0 auto;
-}
-
 .corner {
   width: 545px;
 }
@@ -2689,7 +2684,6 @@ hr {
   border-radius: 20px;
   height: 100%;
 }
-
 .text-timer-medic {
   font-size: 50px;
   line-height: 50px;
@@ -2715,44 +2709,5 @@ hr {
 
 .card-dashboard {
   max-width: 100%;
-}
-
-/* Responsive Zoom based on viewport height */
-@media screen and (max-height: 950px) {
-  .scoring-container {
-    zoom: 0.88;
-  }
-}
-@media screen and (max-height: 850px) {
-  .scoring-container {
-    zoom: 0.80;
-  }
-}
-@media screen and (max-height: 750px) {
-  .scoring-container {
-    zoom: 0.72;
-  }
-}
-@media screen and (max-height: 680px) {
-  .scoring-container {
-    zoom: 0.65;
-  }
-}
-@media screen and (max-height: 600px) {
-  .scoring-container {
-    zoom: 0.58;
-  }
-}
-
-/* Responsive Zoom based on viewport width */
-@media screen and (max-width: 1200px) {
-  .scoring-container {
-    zoom: 0.85;
-  }
-}
-@media screen and (max-width: 1000px) {
-  .scoring-container {
-    zoom: 0.70;
-  }
 }
 </style>
