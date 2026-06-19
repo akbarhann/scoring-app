@@ -1,5 +1,5 @@
 <template>
-  <div ref="controlFighting" @click="controlOsaikomi">
+  <div ref="controlFighting" class="scoring-container" @click="controlOsaikomi">
     <p class="text-center text-20 height-30 font-weight-semi mb-0">
       Control Score Fighting
     </p>
@@ -2614,15 +2614,16 @@ export default {
 <style scoped>
 @import '~/assets/styles.css';
 
+.scoring-container {
+  width: 1140px;
+  margin: 0 auto;
+}
+
 .corner {
-  width: 48%;
-  max-width: 545px;
-  flex: 1 1 auto;
+  width: 545px;
 }
 .time-corner {
-  width: 31%;
-  max-width: 345px;
-  flex: 1 1 auto;
+  width: 345px;
 }
 .red-corner {
   min-width: 100%;
@@ -2678,9 +2679,7 @@ hr {
   z-index: 10 !important;
 }
 .main-timer {
-  width: 48%;
-  max-width: 545px;
-  flex: 1 1 auto;
+  width: 545px;
   border-radius: 20px;
   background: linear-gradient(115.41deg, #ef233c, #243c7a);
   padding: 4px;
@@ -2691,146 +2690,6 @@ hr {
   height: 100%;
 }
 
-/* Height-based media query for smaller viewports (height <= 850px) */
-@media screen and (max-height: 850px) {
-  h4 {
-    font-size: 26px !important;
-    line-height: 32px !important;
-  }
-  .text-20 {
-    font-size: 16px !important;
-    line-height: 20px !important;
-  }
-  .mb-10 {
-    margin-bottom: 12px !important;
-  }
-  .mb-6 {
-    margin-bottom: 8px !important;
-  }
-  .mt-10 {
-    margin-top: 12px !important;
-  }
-  .mt-5 {
-    margin-top: 12px !important;
-  }
-  .my-8 {
-    margin-top: 16px !important;
-    margin-bottom: 16px !important;
-  }
-  
-  .red-corner, .blue-corner, .redblue-corner-inner {
-    padding-top: 8px !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
-  }
-  .red-corner p.text-18, .blue-corner p.text-18 {
-    font-size: 14px !important;
-    margin-bottom: 8px !important;
-  }
-  
-  .text-score {
-    font-size: 55px !important;
-    line-height: 55px !important;
-  }
-  .text-score-small {
-    font-size: 35px !important;
-    line-height: 35px !important;
-  }
-  .text-timer-medic {
-    font-size: 35px !important;
-    line-height: 35px !important;
-  }
-  
-  .v-btn {
-    height: 26px !important;
-    min-width: 25px !important;
-  }
-  .v-btn__content {
-    font-size: 11px !important;
-  }
-  
-  hr {
-    margin-top: 8px !important;
-    margin-bottom: 8px !important;
-  }
-  .pb-4 {
-    padding-bottom: 6px !important;
-  }
-  .pt-3 {
-    padding-top: 6px !important;
-  }
-}
-
-/* Even more compact for very small heights (e.g. tablet height 650px) */
-@media screen and (max-height: 700px) {
-  h4 {
-    font-size: 20px !important;
-    line-height: 24px !important;
-    margin-bottom: 4px !important;
-  }
-  .text-20 {
-    font-size: 13px !important;
-    line-height: 16px !important;
-  }
-  .mb-10 {
-    margin-bottom: 6px !important;
-  }
-  .mb-6 {
-    margin-bottom: 4px !important;
-  }
-  .mt-10 {
-    margin-top: 6px !important;
-  }
-  .mt-5 {
-    margin-top: 6px !important;
-  }
-  
-  .red-corner, .blue-corner, .redblue-corner-inner {
-    padding-top: 4px !important;
-    padding-left: 4px !important;
-    padding-right: 4px !important;
-  }
-  .red-corner p.text-18, .blue-corner p.text-18 {
-    font-size: 12px !important;
-    margin-bottom: 4px !important;
-  }
-  
-  .text-score {
-    font-size: 40px !important;
-    line-height: 40px !important;
-  }
-  .text-score-small {
-    font-size: 26px !important;
-    line-height: 26px !important;
-  }
-  .text-timer-medic {
-    font-size: 26px !important;
-    line-height: 26px !important;
-  }
-  
-  .mt-3 {
-    margin-top: 4px !important;
-  }
-  
-  .v-btn {
-    height: 22px !important;
-    min-width: 20px !important;
-    padding: 0 2px !important;
-    margin: 1px 1px !important;
-  }
-  .v-btn .v-icon {
-    font-size: 14px !important;
-  }
-  
-  .px-10 {
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-  }
-  .mx-10 {
-    margin-left: 10px !important;
-    margin-right: 10px !important;
-  }
-}
 .text-timer-medic {
   font-size: 50px;
   line-height: 50px;
@@ -2856,5 +2715,44 @@ hr {
 
 .card-dashboard {
   max-width: 100%;
+}
+
+/* Responsive Zoom based on viewport height */
+@media screen and (max-height: 950px) {
+  .scoring-container {
+    zoom: 0.88;
+  }
+}
+@media screen and (max-height: 850px) {
+  .scoring-container {
+    zoom: 0.80;
+  }
+}
+@media screen and (max-height: 750px) {
+  .scoring-container {
+    zoom: 0.72;
+  }
+}
+@media screen and (max-height: 680px) {
+  .scoring-container {
+    zoom: 0.65;
+  }
+}
+@media screen and (max-height: 600px) {
+  .scoring-container {
+    zoom: 0.58;
+  }
+}
+
+/* Responsive Zoom based on viewport width */
+@media screen and (max-width: 1200px) {
+  .scoring-container {
+    zoom: 0.85;
+  }
+}
+@media screen and (max-width: 1000px) {
+  .scoring-container {
+    zoom: 0.70;
+  }
 }
 </style>
