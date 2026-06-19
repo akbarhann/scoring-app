@@ -63,6 +63,18 @@
               auto
             ></v-autocomplete>
           </div>
+          <!-- Delete Tournament Button -->
+          <v-btn
+            v-if="tournament"
+            x-small
+            min-width="38px"
+            class="px-1 rounded-8 align-self-center mr-3"
+            color="red darken-4"
+            title="Hapus Turnamen"
+            @click="dialogDeleteTournament = true"
+          >
+            <v-icon class="text-18">mdi-delete</v-icon>
+          </v-btn>
           <v-btn
             x-small
             min-width="38px"
@@ -174,6 +186,24 @@
       </div>
     </div>
 
+    <!-- Dialog Delete Tournament Confirmation -->
+    <v-dialog v-model="dialogDeleteTournament" max-width="450px">
+      <v-card class="pa-4" style="background-color: #1e1e1e; color: white; border-radius: 12px;">
+        <v-card-title class="headline font-weight-bold pb-2 white--text">
+          Hapus Turnamen?
+        </v-card-title>
+        <v-card-text class="pt-2 white--text">
+          Apakah Anda yakin ingin menghapus turnamen ini? Tindakan ini akan menghapus semua kategori, bagan (bracket), dan data pertandingan yang terkait secara permanen.
+        </v-card-text>
+        <v-card-actions class="justify-end pt-2">
+          <v-btn text color="grey lighten-1" @click="dialogDeleteTournament = false">Batal</v-btn>
+          <v-btn color="red darken-4" class="px-6 rounded-lg font-weight-bold white--text" :loading="loadingDeleteTournament" @click="deleteTournamentConfirm">
+            Hapus
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-snackbar v-model="notif" :color="notifColor">
       {{ notifMsg }}
 
@@ -197,6 +227,9 @@ export default {
 
       tournament: null,
       tournamentItem: [],
+
+      dialogDeleteTournament: false,
+      loadingDeleteTournament: false,
 
       charts: [],
       loadingGetData: false,
@@ -290,6 +323,56 @@ export default {
           this.notif = true
           this.notifColor = 'error'
           this.notifMsg = 'Error get chart'
+        })
+    },
+
+    deleteTournamentConfirm() {
+      if (!this.tournament) return;
+      this.loadingDeleteTournament = true
+      const url = '/api/tournament/delete'
+      const params = {
+        id: this.tournament
+      }
+      this.$axios.post(url, params)
+        .then((result) => {
+          this.loadingDeleteTournament = false
+          this.dialogDeleteTournament = false
+          this.notif = true
+          this.notifColor = 'success'
+          this.notifMsg = 'Tournament successfully deleted'
+          
+          // Clear tournament selection & charts list
+          this.tournament = null
+          this.charts = []
+
+          // Refresh tournament list
+          this.getTournament()
+        })
+        .catch((err) => {
+          if (err.response && err.response.status === 404) {
+            this.loadingDeleteTournament = false
+            this.dialogDeleteTournament = false
+            this.notif = true
+            this.notifColor = 'warning'
+            this.notifMsg = 'Turnamen disembunyikan secara permanen di browser ini (Backend 404)'
+            
+            let hidden = localStorage.getItem('hidden_tournaments')
+            hidden = hidden ? JSON.parse(hidden) : []
+            if (!hidden.includes(this.tournament)) {
+              hidden.push(this.tournament)
+            }
+            localStorage.setItem('hidden_tournaments', JSON.stringify(hidden))
+
+            this.tournamentItem = this.tournamentItem.filter((t) => t.id !== this.tournament)
+            this.tournament = null
+            this.charts = []
+            return
+          }
+          this.loadingDeleteTournament = false
+          this.dialogDeleteTournament = false
+          this.notif = true
+          this.notifColor = 'error'
+          this.notifMsg = 'Error Deleting Tournament: ' + err
         })
     },
 

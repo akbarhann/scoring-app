@@ -39,3 +39,4 @@ Route::get('/bracket', [BracketController::class, 'bracket'])->name('bracket');
 Route::get('/bracket/detail', [BracketController::class, 'detail'])->name('bracket_detail');
 Route::post('/save-bracket', [BracketController::class, 'saveBracket'])->name('bracket_save');
 Route::post('/edit-bracket', [BracketController::class, 'editBracket'])->name('bracket_edit');
+Route::post('/tournament/delete', [ItemSelect::class, 'deleteTournament'])->name('tournament_delete');

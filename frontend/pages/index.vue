@@ -35,6 +35,9 @@
 <script>
 export default {
   name: 'LandingPage',
+  middleware({ redirect }) {
+    return redirect('/user/dashboard')
+  },
   data() {
     return {
       username: '',

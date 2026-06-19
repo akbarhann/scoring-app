@@ -122,6 +122,127 @@
         </v-btn>
       </template>
     </v-snackbar>
+
+    <!-- Custom Print Settings & Preview Dialog -->
+    <v-dialog v-model="printDialog" max-width="950px">
+      <v-card class="pa-4" style="background-color: #1e1e1e; color: white; border-radius: 12px;">
+        <v-card-title class="headline font-weight-bold pb-2 white--text">
+          Pengaturan & Pratinjau Cetak
+        </v-card-title>
+        <v-card-text class="pt-2">
+          <v-row>
+            <!-- Left: Settings Controls -->
+            <v-col cols="12" md="5" class="pr-md-4">
+              <v-container class="px-0 py-2">
+                <!-- Orientation -->
+                <v-row class="mb-4" no-gutters>
+                  <v-col cols="12" class="pb-2">
+                    <span class="grey--text text--lighten-1 text-subtitle-2 font-weight-medium">Orientasi Halaman</span>
+                  </v-col>
+                  <v-col cols="12">
+                    <v-btn-toggle
+                      v-model="printSettings.orientation"
+                      mandatory
+                      background-color="grey darken-3"
+                      dark
+                      dense
+                      class="rounded-lg"
+                    >
+                      <v-btn value="landscape" color="primary" class="white--text">
+                        Landscape
+                      </v-btn>
+                      <v-btn value="portrait" color="primary" class="white--text">
+                        Portrait
+                      </v-btn>
+                    </v-btn-toggle>
+                  </v-col>
+                </v-row>
+
+                <!-- Paper Size -->
+                <v-row class="mb-4" no-gutters>
+                  <v-col cols="12" class="pb-2">
+                    <span class="grey--text text--lighten-1 text-subtitle-2 font-weight-medium">Ukuran Kertas</span>
+                  </v-col>
+                  <v-col cols="12">
+                    <v-select
+                      v-model="printSettings.paperSize"
+                      :items="paperSizes"
+                      item-text="text"
+                      item-value="value"
+                      dense
+                      outlined
+                      dark
+                      hide-details
+                      class="rounded-lg"
+                    ></v-select>
+                  </v-col>
+                </v-row>
+
+                <!-- Margin -->
+                <v-row class="mb-4" no-gutters>
+                  <v-col cols="12" class="pb-2">
+                    <span class="grey--text text--lighten-1 text-subtitle-2 font-weight-medium">Margin</span>
+                  </v-col>
+                  <v-col cols="12">
+                    <v-select
+                      v-model="printSettings.margin"
+                      :items="margins"
+                      item-text="text"
+                      item-value="value"
+                      dense
+                      outlined
+                      dark
+                      hide-details
+                      class="rounded-lg"
+                    ></v-select>
+                  </v-col>
+                </v-row>
+
+                <!-- Scale -->
+                <v-row class="mb-2" no-gutters>
+                  <v-col cols="12" class="pb-2 d-flex justify-space-between">
+                    <span class="grey--text text--lighten-1 text-subtitle-2 font-weight-medium">Skala (Scale / Zoom)</span>
+                    <span class="primary--text font-weight-bold">{{ printSettings.scale }}%</span>
+                  </v-col>
+                  <v-col cols="12">
+                    <v-slider
+                      v-model="printSettings.scale"
+                      min="50"
+                      max="150"
+                      step="5"
+                      thumb-label
+                      hide-details
+                      dark
+                    ></v-slider>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-col>
+
+            <!-- Right: Preview Area -->
+            <v-col cols="12" md="7" class="d-flex flex-column align-center justify-center grey darken-4 pa-4 rounded-lg position-relative" style="min-height: 450px; overflow: hidden;">
+              <span class="grey--text text-caption mb-2 position-absolute" style="top: 10px; left: 15px;">Pratinjau (Preview)</span>
+              <div 
+                class="print-preview-sheet elevation-4" 
+                :style="previewSheetStyle"
+              >
+                <div 
+                  class="print-preview-content" 
+                  :style="previewContentStyle"
+                  v-html="bracketHtml"
+                ></div>
+              </div>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions class="justify-end pt-2">
+          <v-btn text color="grey lighten-1" @click="printDialog = false">Batal</v-btn>
+          <v-btn color="primary" class="px-6 rounded-lg font-weight-bold white--text" @click="confirmPrint">
+            Cetak
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -154,11 +275,99 @@ export default {
       chartName: null,
 
       loadingSave: false,
+
+      printDialog: false,
+      printSettings: {
+        orientation: 'landscape',
+        paperSize: 'A4',
+        margin: '10mm',
+        scale: 100,
+      },
+      paperSizes: [
+        { text: 'A4 (210 x 297 mm)', value: 'A4' },
+        { text: 'Letter (8.5 x 11 in)', value: 'letter' },
+        { text: 'Legal (8.5 x 14 in)', value: 'legal' },
+        { text: 'A3 (297 x 420 mm)', value: 'A3' },
+      ],
+      margins: [
+        { text: 'Default (10mm)', value: '10mm' },
+        { text: 'Tanpa Margin (0mm)', value: '0mm' },
+        { text: 'Minimum (5mm)', value: '5mm' },
+        { text: 'Lebar (20mm)', value: '20mm' },
+      ],
+      bracketHtml: '',
+      actualWidth: 1000,
+      actualHeight: 600,
     }
   },
   computed: {
     gameChart() {
       return this.chart;
+    },
+    previewSheetStyle() {
+      const isLandscape = this.printSettings.orientation === 'landscape';
+      let ratio = 1.414; // Default A4
+      if (this.printSettings.paperSize === 'letter') ratio = 1.294;
+      if (this.printSettings.paperSize === 'legal') ratio = 1.647;
+      if (this.printSettings.paperSize === 'A3') ratio = 1.414;
+
+      let width = 450;
+      let height = 450 / ratio;
+
+      if (!isLandscape) {
+        height = 450;
+        width = 450 / ratio;
+      }
+
+      return {
+        width: `${width}px`,
+        height: `${height}px`,
+        backgroundColor: '#ffffff',
+        color: '#000000',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px solid #ccc',
+        transition: 'all 0.3s ease',
+        transformOrigin: 'center center',
+      };
+    },
+    previewContentStyle() {
+      if (!this.actualWidth) return {};
+
+      const isLandscape = this.printSettings.orientation === 'landscape';
+      let ratio = 1.414;
+      if (this.printSettings.paperSize === 'letter') ratio = 1.294;
+      if (this.printSettings.paperSize === 'legal') ratio = 1.647;
+
+      let sheetWidth = 450;
+      if (!isLandscape) {
+        sheetWidth = 450 / ratio;
+      }
+
+      let marginVal = 10; // default 10mm
+      if (this.printSettings.margin === '0mm') marginVal = 0;
+      if (this.printSettings.margin === '5mm') marginVal = 5;
+      if (this.printSettings.margin === '20mm') marginVal = 20;
+
+      const realPageWidthMm = isLandscape ? (this.printSettings.paperSize === 'legal' ? 355.6 : 297) : 210;
+      const marginPx = (marginVal / realPageWidthMm) * sheetWidth;
+
+      const availableWidth = sheetWidth - (marginPx * 2);
+
+      const baseScale = availableWidth / this.actualWidth;
+      const userScale = this.printSettings.scale / 100;
+      const finalScale = baseScale * userScale;
+
+      return {
+        transform: `scale(${finalScale})`,
+        transformOrigin: 'top left',
+        position: 'absolute',
+        top: `${marginPx}px`,
+        left: `${marginPx}px`,
+        width: `${this.actualWidth}px`,
+        height: `${this.actualHeight}px`,
+        pointerEvents: 'none',
+      };
     },
   },
   mounted() {
@@ -207,7 +416,50 @@ export default {
         })
     },
     printBracket() {
-      window.print();
+      const bracketEl = document.getElementById('bracketData');
+      if (bracketEl) {
+        this.bracketHtml = bracketEl.innerHTML;
+        this.actualWidth = bracketEl.scrollWidth || 1000;
+        this.actualHeight = bracketEl.scrollHeight || 600;
+      }
+      this.printDialog = true;
+    },
+    confirmPrint() {
+      const existingStyle = document.getElementById('print-dynamic-style');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+
+      const style = document.createElement('style');
+      style.id = 'print-dynamic-style';
+
+      let scaleCss = '';
+      if (this.printSettings.scale !== 100) {
+        const scaleVal = this.printSettings.scale / 100;
+        scaleCss = `
+          #bracketData {
+            transform: scale(${scaleVal}) !important;
+            transform-origin: top left !important;
+            width: ${100 / scaleVal}% !important;
+          }
+        `;
+      }
+
+      style.innerHTML = `
+        @media print {
+          @page {
+            size: ${this.printSettings.paperSize} ${this.printSettings.orientation} !important;
+            margin: ${this.printSettings.margin} !important;
+          }
+          ${scaleCss}
+        }
+      `;
+      document.head.appendChild(style);
+
+      this.printDialog = false;
+      setTimeout(() => {
+        window.print();
+      }, 500);
     },
     winData(data) {
       this.tempPlayer = this.chart[data.match]?.games[data.index];
@@ -354,9 +606,9 @@ div >>> .vtb-item-players {
   border-radius: 20px;
 }
 @media print {
-  @page {
-    size: landscape;
-    margin: 10mm;
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   body, html, #__nuxt, #__layout, .v-application, .v-application--wrap, .v-main, .v-main__wrap, .v-container {
     background-color: #ffffff !important;
@@ -372,7 +624,12 @@ div >>> .vtb-item-players {
   }
   .card-dashboard,
   .icon-win,
-  .v-btn {
+  .v-btn,
+  .v-dialog__content,
+  .v-dialog,
+  .v-overlay,
+  .v-overlay-container,
+  .v-dialog__holder {
     display: none !important;
   }
   .card-dashboard-bracket {
@@ -393,5 +650,43 @@ div >>> .vtb-item-players {
   .player-hidden {
     visibility: hidden !important;
   }
+
+  /* Force connecting lines borders to be visible (black) in print */
+  .vtb-item-child,
+  .vtb-item-child::after,
+  .vtb-item-child::before,
+  .vtb-item-parent,
+  .vtb-item-parent::after,
+  .vtb-item-parent::before,
+  .vtb-item,
+  .vtb-item-players {
+    border-color: #000000 !important;
+  }
+}
+
+/* Print Preview Styles */
+.print-preview-sheet {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.print-preview-sheet * {
+  color: #000000 !important;
+  background-color: transparent !important;
+  border-color: #000000 !important;
+}
+
+.print-preview-sheet .vtb-player {
+  background-color: #ffffff !important;
+  border: 1px solid #000000 !important;
+}
+
+.print-preview-sheet .player-hidden {
+  visibility: hidden !important;
+}
+
+.print-preview-sheet h5 {
+  color: #000000 !important;
+  margin-top: 10px;
 }
 </style>
