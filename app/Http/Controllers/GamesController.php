@@ -315,51 +315,63 @@ class GamesController extends Controller
                 return Response::json(['error' => 'Tournament not found'], 404);
             }
 
-            // Get all categories for this tournament
-            $categories = Category::where('tournament_id', '=', $tournament_id)->get();
+            $categories = Category::where('tournament_id', '=', $tournament_id)
+                ->orderBy('category_name', 'ASC')
+                ->get();
 
+            // Use a set to track unique (athlete_name, category_id) pairs
+            $seen = [];
             $rows = [];
+
             foreach ($categories as $category) {
-                // Get all charts (match entries) for this category
                 $charts = Chart::where('category_id', '=', $category->id)
                     ->whereNotNull('red_name')
                     ->orderBy('match_number', 'ASC')
                     ->get();
 
                 foreach ($charts as $chart) {
-                    // Add red athlete if not BYE
-                    if ($chart->red_name && $chart->red_name !== 'BYE') {
-                        $rows[] = [
-                            'category_id'   => $category->id,
-                            'category_name' => $category->category_name,
-                            'match_number'  => $chart->match_number,
-                            'athlete_name'  => $chart->red_name,
-                            'dojo'          => $chart->red_club,
-                            'corner'        => 'Merah',
-                            'status'        => $chart->play_now == 2 ? 'Selesai' : ($chart->play_now == 1 ? 'Sedang Bertanding' : 'Menunggu'),
-                            'winner'        => ($chart->play_now == 2 && $chart->winner == 1) ? true : null,
-                        ];
+                    // Red athlete
+                    $redName = trim($chart->red_name ?? '');
+                    if ($redName && $redName !== 'BYE') {
+                        $key = $category->id . '|' . mb_strtolower($redName);
+                        if (!isset($seen[$key])) {
+                            $seen[$key] = true;
+                            $rows[] = [
+                                'category_id'   => $category->id,
+                                'category_name' => $category->category_name,
+                                'athlete_name'  => $redName,
+                                'dojo'          => trim($chart->red_club ?? ''),
+                            ];
+                        }
                     }
-                    // Add blue athlete if not BYE
-                    if ($chart->blue_name && $chart->blue_name !== 'BYE') {
-                        $rows[] = [
-                            'category_id'   => $category->id,
-                            'category_name' => $category->category_name,
-                            'match_number'  => $chart->match_number,
-                            'athlete_name'  => $chart->blue_name,
-                            'dojo'          => $chart->blue_club,
-                            'corner'        => 'Biru',
-                            'status'        => $chart->play_now == 2 ? 'Selesai' : ($chart->play_now == 1 ? 'Sedang Bertanding' : 'Menunggu'),
-                            'winner'        => ($chart->play_now == 2 && $chart->winner == 2) ? true : null,
-                        ];
+
+                    // Blue athlete
+                    $blueName = trim($chart->blue_name ?? '');
+                    if ($blueName && $blueName !== 'BYE') {
+                        $key = $category->id . '|' . mb_strtolower($blueName);
+                        if (!isset($seen[$key])) {
+                            $seen[$key] = true;
+                            $rows[] = [
+                                'category_id'   => $category->id,
+                                'category_name' => $category->category_name,
+                                'athlete_name'  => $blueName,
+                                'dojo'          => trim($chart->blue_club ?? ''),
+                            ];
+                        }
                     }
                 }
             }
 
+            // Sort final result: category name then athlete name
+            usort($rows, function ($a, $b) {
+                $cat = strcmp($a['category_name'], $b['category_name']);
+                return $cat !== 0 ? $cat : strcmp($a['athlete_name'], $b['athlete_name']);
+            });
+
             return Response::json([
-                'tournament' => $tournament,
-                'data'       => $rows,
-                'status_code'=> 200
+                'tournament'  => $tournament,
+                'data'        => $rows,
+                'status_code' => 200
             ], 200);
         } catch (Exception $e) {
             return Response::json([
