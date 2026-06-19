@@ -516,6 +516,9 @@
             <v-btn small outlined color="grey darken-1" class="rounded-8 text-capitalize font-weight-semi" @click="printBracket()">
               Print
             </v-btn>
+            <v-btn v-if="generatedBrackets.length > 1" small outlined color="grey darken-1" class="rounded-8 text-capitalize font-weight-semi" @click="printAllBrackets()">
+              Print All
+            </v-btn>
             <v-btn small color="primaryred" class="rounded-8 text-capitalize font-weight-semi white--text mr-2" :loading="loadingSave" @click="submitBracket()">
               Save Chart
             </v-btn>
@@ -536,7 +539,7 @@
 
         <!-- Bracket render -->
         <div v-if="selectedCategory" class="px-6 pt-4">
-          <div id="bracketData" class="bracket-render-container">
+          <div id="bracketData" class="bracket-render-container print-single-only">
             <!-- Bracket Category Title (rendered on screen and printed) -->
             <div class="bracket-print-title d-flex align-center justify-center" style="gap: 8px;">
               <span>{{ selectedCategory.categoryName }}</span>
@@ -568,6 +571,24 @@
                 </template>
               </bracket>
             </client-only>
+          </div>
+
+          <!-- Print all brackets container -->
+          <div id="allBracketsPrintData" class="print-all-only">
+            <div v-for="(category, cIdx) in generatedBrackets" :key="'print-all-' + cIdx" class="bracket-page-break">
+              <div class="bracket-print-title d-flex align-center justify-center mb-6">
+                <span>{{ category.categoryName }}</span>
+              </div>
+              <client-only>
+                <bracket :rounds="category.bracket">
+                  <template slot="player" slot-scope="{ player }">
+                    <p class="bg-white mb-0 pa-0" :class="{ 'player-hidden': player.hidden, 'player-get-bye': player.isGetBye }">
+                      {{ player.name }}
+                    </p>
+                  </template>
+                </bracket>
+              </client-only>
+            </div>
           </div>
         </div>
       </div>
@@ -661,7 +682,7 @@
               </v-container>
             </v-col>
             <v-col cols="12" md="7" class="d-flex flex-column align-center justify-center pa-4 rounded-8 position-relative" style="min-height: 420px; overflow: hidden; background: rgba(0,0,0,0.4)">
-              <span class="grey--text text-12 position-absolute" style="top: 10px; left: 12px">Pratinjau</span>
+              <span class="grey--text text-12 position-absolute" style="top: 10px; left: 12px">Pratinjau {{ isPrintingAll ? '(Semua Kategori)' : '' }}</span>
               <div class="print-preview-sheet elevation-4" :style="previewSheetStyle">
                 <!-- eslint-disable-next-line vue/no-v-html -->
                 <div class="print-preview-content" :style="previewContentStyle" v-html="bracketHtml"></div>
@@ -670,7 +691,7 @@
           </v-row>
         </v-card-text>
         <v-card-actions class="justify-end pt-4 px-0">
-          <v-btn text color="grey" class="text-capitalize mr-2" @click="printDialog = false">Batal</v-btn>
+          <v-btn text color="grey" class="text-capitalize mr-2" @click="printDialog = false; isPrintingAll = false;">Batal</v-btn>
           <v-btn color="primaryred" class="rounded-8 text-capitalize font-weight-semi white--text px-6" @click="confirmPrint">Cetak</v-btn>
         </v-card-actions>
       </v-card>
@@ -961,6 +982,7 @@ export default {
         cutoffDate: new Date().toISOString().substring(0, 10),
       },
       printDialog: false,
+      isPrintingAll: false,
       printSettings: {
         orientation: 'landscape',
         paperSize: 'A4',
@@ -1919,6 +1941,18 @@ export default {
     },
 
     printBracket() {
+      this.isPrintingAll = false;
+      const bracketEl = document.getElementById('bracketData');
+      if (bracketEl) {
+        this.bracketHtml = bracketEl.innerHTML;
+        this.actualWidth = bracketEl.scrollWidth || 1000;
+        this.actualHeight = bracketEl.scrollHeight || 600;
+      }
+      this.printDialog = true;
+    },
+
+    printAllBrackets() {
+      this.isPrintingAll = true;
       const bracketEl = document.getElementById('bracketData');
       if (bracketEl) {
         this.bracketHtml = bracketEl.innerHTML;
@@ -1940,13 +1974,23 @@ export default {
       let scaleCss = '';
       if (this.printSettings.scale !== 100) {
         const scaleVal = this.printSettings.scale / 100;
-        scaleCss = `
-          #bracketData {
-            transform: scale(${scaleVal}) !important;
-            transform-origin: top left !important;
-            width: ${100 / scaleVal}% !important;
-          }
-        `;
+        if (this.isPrintingAll) {
+          scaleCss = `
+            #allBracketsPrintData {
+              transform: scale(${scaleVal}) !important;
+              transform-origin: top center !important;
+              width: ${100 / scaleVal}% !important;
+            }
+          `;
+        } else {
+          scaleCss = `
+            #bracketData {
+              transform: scale(${scaleVal}) !important;
+              transform-origin: top left !important;
+              width: ${100 / scaleVal}% !important;
+            }
+          `;
+        }
       }
 
       style.innerHTML = `
@@ -1960,9 +2004,18 @@ export default {
       `;
       document.head.appendChild(style);
 
+      if (this.isPrintingAll) {
+        document.body.classList.add('printing-all-active');
+      } else {
+        document.body.classList.remove('printing-all-active');
+      }
+
       this.printDialog = false;
       setTimeout(() => {
         window.print();
+        // Clean up
+        document.body.classList.remove('printing-all-active');
+        this.isPrintingAll = false;
       }, 500);
     },
 
@@ -2940,6 +2993,46 @@ div >>> .vtb-item-players {
     color: #000000 !important;
     font-size: 24px !important;
     margin-bottom: 30px !important;
+    display: block !important;
+  }
+}
+
+/* ── Print-all utility classes ── */
+div >>> .print-all-only {
+  display: none !important;
+}
+
+div >>> .print-single-only {
+  display: block;
+}
+
+@media print {
+  body:not(.printing-all-active) div >>> .print-all-only {
+    display: none !important;
+  }
+  body:not(.printing-all-active) div >>> .print-single-only {
+    display: block !important;
+  }
+
+  body.printing-all-active div >>> .print-single-only {
+    display: none !important;
+  }
+  body.printing-all-active div >>> .print-all-only {
+    display: block !important;
+    width: max-content !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+  body.printing-all-active div >>> .bracket-page-break {
+    page-break-after: always !important;
+    page-break-inside: avoid !important;
+    break-after: page !important;
+    position: relative !important;
+    width: max-content !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    margin-bottom: 0 !important;
+    padding: 20px 0 !important;
     display: block !important;
   }
 }
