@@ -1,7 +1,8 @@
 <template>
   <div class="mt-8">
-    <!-- Import -->
-    <div class="card-dashboard mb-6 pb-6">
+    <div class="print-hide">
+      <!-- Import -->
+      <div class="card-dashboard mb-6 pb-6">
       <div class="">
         <p
           class="
@@ -197,6 +198,7 @@
           </v-col>
         </v-row>
       </div>
+    </div>
     </div>
 
     <!-- Dialog Delete Tournament Confirmation -->
@@ -768,29 +770,46 @@ div >>> .print-all-only {
   display: none !important;
 }
 
+body.printing-all-active div >>> .print-all-only {
+  display: block !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  width: max-content !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  z-index: -9999 !important;
+}
+
+body.printing-all-active .print-hide {
+  display: none !important;
+}
+
 @media print {
   body:not(.printing-all-active) div >>> .print-all-only {
     display: none !important;
   }
   
+  body.printing-all-active .print-hide {
+    display: none !important;
+  }
+  
   body.printing-all-active #minimal-header-container,
   body.printing-all-active .step-nav,
-  body.printing-all-active .print-hide,
-  body.printing-all-active #bracket-select-header,
-  body.printing-all-active .bracket-toolbar,
   body.printing-all-active .v-navigation-drawer,
   body.printing-all-active .v-app-bar,
   body.printing-all-active .v-footer,
   body.printing-all-active .icon-win,
   body.printing-all-active .v-btn,
-  body.printing-all-active .card-dashboard,
-  body.printing-all-active .mt-8,
-  body.printing-all-active #bracket-select-wrapper {
+  body.printing-all-active .card-dashboard {
     display: none !important;
   }
 
   body.printing-all-active div >>> .print-all-only {
     display: block !important;
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
     width: max-content !important;
     max-width: none !important;
     overflow: visible !important;
