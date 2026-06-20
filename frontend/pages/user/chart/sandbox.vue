@@ -330,7 +330,7 @@
               <span class="grey--text text-12">Verifikasi hasil pemetaan kolom Excel sebelum membuat bagan.</span>
             </div>
             
-            <div style="max-width: 250px; width: 100%">
+            <div class="d-flex align-center" style="gap: 8px;">
               <v-text-field
                 v-model="searchQueryAthletes"
                 label="Cari Atlet..."
@@ -340,7 +340,16 @@
                 dark
                 append-icon="mdi-magnify"
                 class="rounded-8"
+                style="max-width: 200px"
               ></v-text-field>
+              <v-btn
+                color="teal darken-2"
+                class="rounded-8 text-capitalize font-weight-semi white--text height-40 px-4"
+                @click="downloadCleanMaster"
+              >
+                <v-icon left small>mdi-file-excel</v-icon>
+                Unduh Master Bersih
+              </v-btn>
             </div>
           </div>
 
@@ -353,7 +362,8 @@
                 <th class="text-center font-weight-bold py-3" style="width: 100px">Gender</th>
                 <th class="text-center font-weight-bold py-3" style="width: 80px">Usia</th>
                 <th class="text-center font-weight-bold py-3" style="width: 100px">Berat (kg)</th>
-                <th class="text-left font-weight-bold py-3">Nomor Pertandingan</th>
+                <th class="text-left font-weight-bold py-3">Kategori Asli (Excel)</th>
+                <th class="text-left font-weight-bold py-3">Kategori Hasil Konversi (Clean)</th>
                 <th class="text-center font-weight-bold py-3" style="width: 80px">Aksi</th>
               </tr>
             </thead>
@@ -370,6 +380,7 @@
                 <td class="text-center white--text font-weight-bold py-2 text-13">{{ athlete.age }}</td>
                 <td class="text-center white--text font-weight-bold py-2 text-13">{{ athlete.weight }} kg</td>
                 <td class="grey--text text-13 py-2">{{ athlete.matchType }}</td>
+                <td class="white--text font-weight-medium py-2 text-13">{{ athlete.cleanCategory || 'Memproses...' }}</td>
                 <td class="text-center py-2">
                   <v-btn icon x-small color="error" @click="deleteAthlete(i)">
                     <v-icon size="16">mdi-trash-can-outline</v-icon>
@@ -1841,6 +1852,79 @@ export default {
       }
     },
 
+    downloadCleanMaster() {
+      if (this.rawAthletes.length === 0) return
+
+      try {
+        const headers = [
+          'No',
+          'Nama Atlet',
+          'Dojo / Club',
+          'Gender',
+          'Usia',
+          'Berat Badan (kg)',
+          'Kategori Asli',
+          'Kategori Hasil Konversi'
+        ]
+
+        const rows = this.rawAthletes.map((athlete, idx) => [
+          idx + 1,
+          athlete.name,
+          athlete.club,
+          athlete.gender,
+          athlete.age,
+          athlete.weight,
+          athlete.matchType,
+          athlete.cleanCategory || ''
+        ])
+
+        const wb = XLSX.utils.book_new()
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
+
+        // Add auto column widths for better readability
+        const colWidths = headers.map((h, i) => {
+          let maxLen = h.length
+          rows.forEach(row => {
+            const val = String(row[i] || '')
+            if (val.length > maxLen) maxLen = val.length
+          })
+          return { wch: maxLen + 3 }
+        })
+        ws['!cols'] = colWidths
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Master Data Clean')
+
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' })
+
+        function s2ab(s) {
+          const buf = new ArrayBuffer(s.length)
+          const view = new Uint8Array(buf)
+          for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff
+          return buf
+        }
+
+        const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `Master_Clean_${this.tournamentName.replace(/\s+/g, '_') || 'Turnamen'}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
+
+        this.notif = true
+        this.notifColor = 'success'
+        this.notifMsg = 'Master data bersih berhasil diunduh!'
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err)
+        this.notif = true
+        this.notifColor = 'error'
+        this.notifMsg = 'Gagal mengunduh master data bersih.'
+      }
+    },
+
     processAutoGrouping() {
       const categoriesMap = {}
 
@@ -1862,6 +1946,8 @@ export default {
         const weightClassName = matchedWeight ? matchedWeight.name : `${athlete.weight} kg`
 
         const finalCategoryName = `${matchedType} ${genderClean} ${ageGroupName} ${weightClassName}`
+
+        athlete.cleanCategory = finalCategoryName
 
         if (!categoriesMap[finalCategoryName]) {
           categoriesMap[finalCategoryName] = []
