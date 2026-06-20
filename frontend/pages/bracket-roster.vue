@@ -18,7 +18,7 @@
       <header class="page-header">
         <div class="header-badge">DAFTAR PESERTA</div>
         <h1 class="header-title">{{ tournamentName }}</h1>
-        <p class="header-sub">{{ participants.length }} Peserta &nbsp;·&nbsp; {{ uniqueCategories.length }} Kategori</p>
+        <p class="header-sub">{{ deduped.length }} Peserta &nbsp;·&nbsp; {{ uniqueCategories.length }} Kategori</p>
       </header>
 
       <!-- Toolbar -->
@@ -113,17 +113,32 @@ export default {
     }
   },
   computed: {
+    // Deduplicate at JS level: unique key = category_id + normalized athlete name
+    // This handles backend caching, trailing spaces, or other inconsistencies
+    deduped() {
+      const seen = new Set();
+      return this.participants.filter(p => {
+        // Normalize: lowercase + collapse multiple spaces
+        const name = (p.athlete_name || '').toLowerCase().replace(/\s+/g, ' ').trim();
+        const key = `${p.category_id}|${name}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    },
     uniqueCategories() {
       const map = {};
-      this.participants.forEach(p => { map[p.category_id] = p.category_name; });
+      this.deduped.forEach(p => { map[p.category_id] = p.category_name; });
       return Object.entries(map)
         .map(([id, name]) => ({ id: Number(id), name }))
         .sort((a, b) => a.name.localeCompare(b.name));
     },
     filtered() {
-      let rows = this.participants;
-      if (this.filterCategory) {
-        rows = rows.filter(r => r.category_id === this.filterCategory);
+      // filterCategory comes from select option value which is a Number
+      let rows = this.deduped;
+      if (this.filterCategory !== '') {
+        // eslint-disable-next-line eqeqeq
+        rows = rows.filter(r => r.category_id == this.filterCategory);
       }
       if (this.search) {
         const q = this.search.toLowerCase();
