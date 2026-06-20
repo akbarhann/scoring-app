@@ -29,7 +29,7 @@
         </div>
         <select v-model="filterCategory" class="filter-select">
           <option value="">Semua Kategori</option>
-          <option v-for="c in uniqueCategories" :key="c.id" :value="c.id">{{ c.name }}</option>
+          <option v-for="c in uniqueCategories" :key="c" :value="c">{{ c }}</option>
         </select>
       </div>
 
@@ -113,32 +113,27 @@ export default {
     }
   },
   computed: {
-    // Deduplicate at JS level: unique key = category_id + normalized athlete name
-    // This handles backend caching, trailing spaces, or other inconsistencies
+    // Deduplicate at JS level: unique key = category_name + normalized athlete name
+    // This handles cases where categories with the same name have different IDs (e.g. pools)
     deduped() {
       const seen = new Set();
       return this.participants.filter(p => {
-        // Normalize: lowercase + collapse multiple spaces
-        const name = (p.athlete_name || '').toLowerCase().replace(/\s+/g, ' ').trim();
-        const key = `${p.category_id}|${name}`;
+        const catName = (p.category_name || '').trim().toLowerCase();
+        const athName = (p.athlete_name || '').toLowerCase().replace(/\s+/g, ' ').trim();
+        const key = `${catName}|${athName}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       });
     },
     uniqueCategories() {
-      const map = {};
-      this.deduped.forEach(p => { map[p.category_id] = p.category_name; });
-      return Object.entries(map)
-        .map(([id, name]) => ({ id: Number(id), name }))
-        .sort((a, b) => a.name.localeCompare(b.name));
+      const cats = this.deduped.map(p => p.category_name);
+      return [...new Set(cats)].sort((a, b) => a.localeCompare(b));
     },
     filtered() {
-      // filterCategory comes from select option value which is a Number
       let rows = this.deduped;
       if (this.filterCategory !== '') {
-        // eslint-disable-next-line eqeqeq
-        rows = rows.filter(r => r.category_id == this.filterCategory);
+        rows = rows.filter(r => r.category_name === this.filterCategory);
       }
       if (this.search) {
         const q = this.search.toLowerCase();

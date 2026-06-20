@@ -333,7 +333,8 @@ class GamesController extends Controller
                     // Red athlete
                     $redName = trim($chart->red_name ?? '');
                     if ($redName && $redName !== 'BYE') {
-                        $key = $category->id . '|' . mb_strtolower($redName);
+                        $normalizedCat = mb_strtolower(trim($category->category_name ?? ''));
+                        $key = $normalizedCat . '|' . mb_strtolower($redName);
                         if (!isset($seen[$key])) {
                             $seen[$key] = true;
                             $rows[] = [
@@ -348,7 +349,8 @@ class GamesController extends Controller
                     // Blue athlete
                     $blueName = trim($chart->blue_name ?? '');
                     if ($blueName && $blueName !== 'BYE') {
-                        $key = $category->id . '|' . mb_strtolower($blueName);
+                        $normalizedCat = mb_strtolower(trim($category->category_name ?? ''));
+                        $key = $normalizedCat . '|' . mb_strtolower($blueName);
                         if (!isset($seen[$key])) {
                             $seen[$key] = true;
                             $rows[] = [
