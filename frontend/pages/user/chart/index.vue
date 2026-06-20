@@ -147,13 +147,16 @@
             <tr v-for="(data, i) in charts" :key="i">
               <td>{{ data.category_name }}</td>
               <td class="w-15">
-                <div class="d-flex">
+                <div class="d-flex align-center">
                   <v-icon class="text-20 pointer" @click="openPage(data.id)"
                     >mdi-open-in-new</v-icon
                   >
-                  <!-- <v-icon class="text-20 pointer ml-2" @click="donwloadChart(data.id)"
-                    >mdi-tray-arrow-down</v-icon
-                  > -->
+                  <v-icon
+                    class="text-20 pointer ml-3"
+                    color="blue-grey lighten-2"
+                    @click="editCategoryName(data)"
+                    >mdi-pencil</v-icon
+                  >
                 </div>
               </td>
             </tr>
@@ -226,6 +229,38 @@
           <v-btn text color="grey lighten-1" @click="dialogDeleteTournament = false">Batal</v-btn>
           <v-btn color="red darken-4" class="px-6 rounded-lg font-weight-bold white--text" :loading="loadingDeleteTournament" @click="deleteTournamentConfirm">
             Hapus
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Rename Category Dialog -->
+    <v-dialog v-model="renameCategoryDialog" max-width="500px">
+      <v-card class="pa-5" style="background: #1e1e1e; border-radius: 14px;">
+        <v-card-title class="white--text font-weight-semi text-16 pb-2 px-0">
+          <v-icon color="primaryred" class="mr-2">mdi-pencil</v-icon>
+          Ubah Nama Bagan / Kategori
+        </v-card-title>
+        <v-card-text class="px-0 pt-2 pb-3">
+          <v-text-field
+            v-model="editCategoryNameInput"
+            label="Nama Kategori"
+            outlined
+            dense
+            dark
+            hide-details
+            class="mt-2"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions class="justify-end px-0 pb-0">
+          <v-btn text color="grey lighten-1" @click="renameCategoryDialog = false">Batal</v-btn>
+          <v-btn
+            color="primaryred"
+            class="white--text rounded-8 px-4 font-weight-bold"
+            :loading="loadingRenameCategory"
+            @click="submitRenameCategory"
+          >
+            Simpan
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -393,6 +428,12 @@ export default {
       // Roster link
       rosterLinkDialog: false,
       rosterLink: '',
+
+      // Rename category
+      renameCategoryDialog: false,
+      loadingRenameCategory: false,
+      editCategoryNameInput: '',
+      activeEditCategory: null,
 
       // Print settings variables
       loadingPrintAll: false,
@@ -645,6 +686,47 @@ export default {
         }
       }
       localStorage.setItem('liveBracket', JSON.stringify(local))
+    },
+
+    editCategoryName(category) {
+      this.activeEditCategory = category;
+      this.editCategoryNameInput = category.category_name;
+      this.renameCategoryDialog = true;
+    },
+
+    async submitRenameCategory() {
+      if (!this.editCategoryNameInput || !this.editCategoryNameInput.trim()) {
+        this.notif = true;
+        this.notifColor = 'error';
+        this.notifMsg = 'Nama kategori tidak boleh kosong!';
+        return;
+      }
+
+      this.loadingRenameCategory = true;
+      try {
+        const payload = {
+          id: this.activeEditCategory.id,
+          category_name: this.editCategoryNameInput.trim()
+        };
+        const res = await this.$axios.$post('/api/category/rename', payload);
+        
+        // Update local chart list state
+        const index = this.charts.findIndex(c => c.id === this.activeEditCategory.id);
+        if (index !== -1) {
+          this.charts[index].category_name = res.data.category_name;
+        }
+
+        this.renameCategoryDialog = false;
+        this.notif = true;
+        this.notifColor = 'success';
+        this.notifMsg = 'Nama bagan berhasil diubah!';
+      } catch (err) {
+        this.notif = true;
+        this.notifColor = 'error';
+        this.notifMsg = err.response?.data?.message || 'Gagal mengubah nama bagan.';
+      } finally {
+        this.loadingRenameCategory = false;
+      }
     },
 
     generateRosterLink() {

@@ -110,4 +110,33 @@ class ItemSelect extends Controller
             ], 500);
         }
     }
+
+    public function renameCategory(Request $request)
+    {
+        try {
+            $request->validate([
+                'id'            => 'required|integer',
+                'category_name' => 'required|string|max:255',
+            ]);
+
+            $category = Category::where('id', '=', $request->id)->first();
+            if (!$category) {
+                return Response::json(['error' => 'Category not found'], 404);
+            }
+
+            $category->category_name = $request->category_name;
+            $category->save();
+
+            return Response::json([
+                'message'     => 'Category successfully renamed',
+                'data'        => $category,
+                'status_code' => 200
+            ], 200);
+        } catch (Exception $e) {
+            return Response::json([
+                'error'   => 'Fail rename category',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
