@@ -157,6 +157,12 @@
                     @click="editCategoryName(data)"
                     >mdi-pencil</v-icon
                   >
+                  <v-icon
+                    class="text-20 pointer ml-3"
+                    color="red darken-1"
+                    @click="deleteCategory(data)"
+                    >mdi-delete</v-icon
+                  >
                 </div>
               </td>
             </tr>
@@ -261,6 +267,30 @@
             @click="submitRenameCategory"
           >
             Simpan
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Delete Category Dialog -->
+    <v-dialog v-model="dialogDeleteCategory" max-width="500px">
+      <v-card class="pa-5" style="background: #1e1e1e; border-radius: 14px;">
+        <v-card-title class="white--text font-weight-bold text-16 pb-2 px-0">
+          <v-icon color="red" class="mr-2">mdi-alert-circle</v-icon>
+          Hapus Bagan / Kategori?
+        </v-card-title>
+        <v-card-text class="px-0 pt-2 pb-3 white--text">
+          Apakah Anda yakin ingin menghapus bagan/kategori <strong>{{ activeDeleteCategory ? activeDeleteCategory.category_name : '' }}</strong>? Tindakan ini akan menghapus semua data pertandingan dan struktur bagan yang terkait secara permanen.
+        </v-card-text>
+        <v-card-actions class="justify-end px-0 pb-0">
+          <v-btn text color="grey lighten-1" @click="dialogDeleteCategory = false">Batal</v-btn>
+          <v-btn
+            color="red darken-4"
+            class="white--text rounded-8 px-6 font-weight-bold"
+            :loading="loadingDeleteCategory"
+            @click="deleteCategoryConfirm"
+          >
+            Hapus
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -434,6 +464,11 @@ export default {
       loadingRenameCategory: false,
       editCategoryNameInput: '',
       activeEditCategory: null,
+
+      // Delete category
+      dialogDeleteCategory: false,
+      loadingDeleteCategory: false,
+      activeDeleteCategory: null,
 
       // Print settings variables
       loadingPrintAll: false,
@@ -726,6 +761,36 @@ export default {
         this.notifMsg = err.response?.data?.message || 'Gagal mengubah nama bagan.';
       } finally {
         this.loadingRenameCategory = false;
+      }
+    },
+
+    deleteCategory(category) {
+      this.activeDeleteCategory = category;
+      this.dialogDeleteCategory = true;
+    },
+
+    async deleteCategoryConfirm() {
+      if (!this.activeDeleteCategory) return;
+
+      this.loadingDeleteCategory = true;
+      try {
+        await this.$axios.$post('/api/category/delete', {
+          id: this.activeDeleteCategory.id
+        });
+
+        // Remove from local chart list state
+        this.charts = this.charts.filter(c => c.id !== this.activeDeleteCategory.id);
+
+        this.dialogDeleteCategory = false;
+        this.notif = true;
+        this.notifColor = 'success';
+        this.notifMsg = 'Bagan / Kategori berhasil dihapus!';
+      } catch (err) {
+        this.notif = true;
+        this.notifColor = 'error';
+        this.notifMsg = err.response?.data?.message || 'Gagal menghapus bagan / kategori.';
+      } finally {
+        this.loadingDeleteCategory = false;
       }
     },
 

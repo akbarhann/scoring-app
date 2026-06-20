@@ -27,6 +27,7 @@ Route::get('/martial', [ItemSelect::class, 'martial'])->name('martial');
 Route::get('/tournament', [ItemSelect::class, 'tournament'])->name('tournament');
 Route::get('/category', [ItemSelect::class, 'category'])->name('category');
 Route::post('/category/rename', [ItemSelect::class, 'renameCategory'])->name('category_rename');
+Route::post('/category/delete', [ItemSelect::class, 'deleteCategory'])->name('category_delete');
 
 Route::get('/game/list', [GamesController::class, 'list'])->name('game_list');
 Route::get('/game/detail', [GamesController::class, 'detail'])->name('game_detail');

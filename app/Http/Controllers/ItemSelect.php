@@ -139,4 +139,40 @@ class ItemSelect extends Controller
             ], 500);
         }
     }
+
+    public function deleteCategory(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer'
+        ]);
+
+        $categoryId = $request->id;
+
+        try {
+            DB::transaction(function () use ($categoryId) {
+                // Delete games associated with charts under this category
+                $chartIds = DB::table('charts')->where('category_id', $categoryId)->pluck('id');
+                DB::table('games')->whereIn('chart_id', $chartIds)->delete();
+
+                // Delete brackets associated with this category
+                DB::table('brackets')->where('category_id', $categoryId)->delete();
+
+                // Delete charts under this category
+                DB::table('charts')->where('category_id', $categoryId)->delete();
+
+                // Delete category
+                DB::table('categories')->where('id', $categoryId)->delete();
+            });
+
+            return Response::json([
+                'message' => 'Category successfully deleted',
+                'status_code' => 200
+            ], 200);
+        } catch (Exception $e) {
+            return Response::json([
+                'error' => 'Fail delete category',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
