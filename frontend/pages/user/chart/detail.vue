@@ -463,17 +463,31 @@ export default {
     },
     winData(data) {
       this.tempPlayer = this.chart[data.match]?.games[data.index];
+      this.notif = true;
+      this.notifColor = 'info';
+      this.notifMsg = `Pemenang disalin: ${data.name}. Klik ikon arah panah di slot tujuan untuk menempel.`;
     },
     setWinData(data) {
       const tempChart = this.chart;
-      tempChart[data.match].games[data.index].player1.name = this.tempPlayer.player1.name;
-      tempChart[data.match].games[data.index].player2.name = this.tempPlayer.player2.name;
+      const game = tempChart[data.match].games[data.index];
+      game.player1.name = this.tempPlayer.player1.name;
+      game.player2.name = this.tempPlayer.player2.name;
+      if (game.player1) {
+        game.player1.hidden = game.player1.name === 'BYE';
+      }
+      if (game.player2) {
+        game.player2.hidden = game.player1.name === 'BYE';
+      }
       this.tempPlayer = null;
 
       this.chart = []
       setTimeout(() => {
         this.chart = tempChart
       }, 100);
+
+      this.notif = true;
+      this.notifColor = 'success';
+      this.notifMsg = 'Pemenang berhasil ditempel!';
     },
     hideData() {
       this.chartHidden.push(this.chart[0]);

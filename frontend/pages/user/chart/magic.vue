@@ -627,7 +627,7 @@
                       @click.stop="setWinData(player)"
                     >mdi-tray-arrow-down</v-icon>
                     <v-icon
-                      v-else-if="player.setting && player.name !== 'BYE' && player.name !== 'Waiting'"
+                      v-else-if="player.setting"
                       color="secondary"
                       size="20"
                       class="icon-win"
@@ -2365,6 +2365,12 @@ export default {
         // Copy athlete name and club to the destination game
         game.player1.name = this.tempPlayer.player1.name;
         game.player2.name = this.tempPlayer.player2.name;
+        if (game.player1) {
+          game.player1.hidden = game.player1.name === 'BYE';
+        }
+        if (game.player2) {
+          game.player2.hidden = game.player1.name === 'BYE';
+        }
         
         // Trigger Vue reactivity update
         this.selectedCategory.bracket = [...bracket];
