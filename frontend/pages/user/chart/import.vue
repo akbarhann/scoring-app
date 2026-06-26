@@ -101,6 +101,46 @@
             <v-icon class="text-18">mdi-tray-arrow-down</v-icon>
           </v-btn>
         </div>
+        <!-- Pilihan Sheet dan Kategori Hasil Analisis AI -->
+        <div v-if="availableSheets.length > 0" class="d-flex px-6 pb-4 align-center flex-wrap">
+          <div class="mr-3 mb-2" style="width: 220px;">
+            <v-select
+              v-model="selectedSheet"
+              :items="availableSheets"
+              label="Select Sheet"
+              hide-details
+              outlined
+              dense
+              @change="analyzeSheetStructure()"
+            ></v-select>
+          </div>
+
+          <div v-if="parsedCategories.length > 0" class="mr-3 mb-2" style="width: 320px;">
+            <v-select
+              v-model="selectedCategoryIndex"
+              :items="parsedCategories.map((c, i) => ({ text: `${c.categoryName} (${c.players.length} Atlet)`, value: i }))"
+              item-text="text"
+              item-value="value"
+              label="Pilih Kategori Hasil AI"
+              hide-details
+              outlined
+              dense
+              @change="selectCategory(selectedCategoryIndex)"
+            ></v-select>
+          </div>
+
+          <v-btn
+            v-if="fileImport"
+            small
+            outlined
+            color="primaryred"
+            class="rounded-8 mb-2 align-self-center"
+            :loading="analyzing"
+            @click="analyzeSheetStructure()"
+          >
+            <v-icon class="mr-2">mdi-auto-fix</v-icon> Re-Analyze with AI
+          </v-btn>
+        </div>
       </div>
     </div>
     <!-- Shuffle Data -->
@@ -256,18 +296,6 @@
       </div>
     </div>
 
-    <div class="d-none">
-      <xlsx-read :file="fileImport">
-        <xlsx-json>
-          <template #default="{ collection }">
-            <div ref="dataJson">
-              {{ collection }}
-            </div>
-          </template>
-        </xlsx-json>
-      </xlsx-read>
-    </div>
-
     <v-snackbar v-model="notif" :color="notifColor">
       {{ notifMsg }}
 
@@ -281,12 +309,10 @@
 </template>
 
 <script>
-import { XlsxRead, XlsxJson } from 'vue-xlsx'
+import * as XLSX from 'xlsx'
 export default {
   name: 'CategoryImportPage',
   components: {
-    XlsxRead,
-    XlsxJson,
     [process.client && 'Bracket']: () => import('vue-tournament-bracket'),
   },
   layout: 'dashboard',
@@ -324,6 +350,14 @@ export default {
       loadingSave: false,
       shufflelingLeft: false,
       shufflelingRight: false,
+
+      // New properties for AI Smart Import
+      availableSheets: [],
+      selectedSheet: null,
+      parsedCategories: [],
+      selectedCategoryIndex: 0,
+      workbook: null,
+      analyzing: false,
     }
   },
   mounted() {
@@ -353,7 +387,6 @@ export default {
           this.notif = true
           this.notifColor = 'error'
           this.notifMsg = 'Error get martial'
-          // this.removeDataChart()
         })
     },
     async getTournament() {
@@ -376,60 +409,223 @@ export default {
           this.notif = true
           this.notifColor = 'error'
           this.notifMsg = 'Error get tournament'
-          // this.removeDataChart()
         })
     },
     getDataFromExcel() {
-      setTimeout(() => {
-        this.exelJson = JSON.parse(this.$refs.dataJson.innerHTML)
-        const e1 = []
-        const e2 = []
+      if (!this.fileImport) return
 
-        const maxData = Math.ceil(this.exelJson.length / 2)
-        this.exelJson.forEach((e) => {
-          if (e.Club) {
-            const same = this.findDuplicates(e.Club, e1)
-            const same2 = this.findDuplicates(e.Club, e2)
-            if (same) {
-              e2.push(e)
-            } else if (e1.length >= maxData) {
-              if (same2) {
-                e1.push(e)
-              } else {
-                e2.push(e)
-              }
-            } else {
-              e1.push(e)
-            }
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        try {
+          const data = new Uint8Array(e.target.result)
+          const workbook = XLSX.read(data, { type: 'array' })
+          
+          this.workbook = workbook
+          this.availableSheets = workbook.SheetNames
+          this.selectedSheet = workbook.SheetNames[0]
+          
+          await this.analyzeSheetStructure()
+        } catch (err) {
+          this.notif = true
+          this.notifColor = 'error'
+          this.notifMsg = 'Error reading excel: ' + err.message
+        }
+      }
+      reader.readAsArrayBuffer(this.fileImport)
+    },
+    async analyzeSheetStructure() {
+      if (!this.workbook || !this.selectedSheet) return
+      this.analyzing = true
 
-            if (same && same2) {
-              this.notif = true
-              this.notifColor = 'error'
-              this.notifMsg = e.Club + ' More than 2'
+      try {
+        const sheet = this.workbook.Sheets[this.selectedSheet]
+        const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" })
+        
+        // 1. Crop empty margins (padding)
+        const cropped = this.cropEmptyMarginsJS(rawRows)
+        
+        // 2. Take preview (first 15 rows)
+        const preview = cropped.slice(0, 15)
+        
+        // 3. Request parsing recipe from Groq AI
+        const response = await this.$axios.$post('/api/parse-recipe', { preview })
+        if (response.status === 'success') {
+          const recipe = response.recipe
+          
+          // 4. Parse the sheet locally using the recipe
+          const categories = this.executeRecipeJS(cropped, this.selectedSheet, recipe)
+          this.parsedCategories = categories
+          
+          if (categories.length > 0) {
+            this.selectedCategoryIndex = 0
+            this.selectCategory(0)
+          }
+          
+          this.notif = true
+          this.notifColor = 'success'
+          this.notifMsg = `Berhasil mendeteksi ${categories.length} kategori!`
+        } else {
+          throw new Error(response.message)
+        }
+      } catch (err) {
+        this.notif = true
+        this.notifColor = 'error'
+        this.notifMsg = 'Gagal menganalisis struktur: ' + err.message
+      } finally {
+        this.analyzing = false
+      }
+    },
+    cropEmptyMarginsJS(rows) {
+      if (!rows || rows.length === 0) return []
+      
+      // Find first valid column
+      let firstValidCol = rows[0].length
+      rows.forEach((row) => {
+        for (let c = 0; c < row.length; c++) {
+          if (row[c] !== undefined && row[c] !== null && String(row[c]).trim() !== "") {
+            if (c < firstValidCol) {
+              firstValidCol = c
             }
           }
-        })
+        }
+      })
+      
+      if (firstValidCol === rows[0].length) return []
+      
+      // Slice left columns
+      const croppedCols = rows.map(row => row.slice(firstValidCol))
+      
+      // Find first valid row
+      let firstValidRow = -1
+      for (let r = 0; r < croppedCols.length; r++) {
+        const hasData = croppedCols[r].some(cell => cell !== undefined && cell !== null && String(cell).trim() !== "")
+        if (hasData) {
+          firstValidRow = r
+          break
+        }
+      }
+      
+      if (firstValidRow === -1) return []
+      
+      return croppedCols.slice(firstValidRow)
+    },
+    executeRecipeJS(rows, sheetName, recipe) {
+      const headerIdx = recipe.header_row_index
+      const nameColIdx = recipe.column_mapping.name_column_index
+      const clubColIdx = recipe.column_mapping.club_column_index
+      const hasStacked = recipe.segmentation && recipe.segmentation.has_stacked_tables
+      
+      const categories = []
+      let currentCategoryName = sheetName
+      let currentPlayers = []
+      
+      const nameKeywords = ['nama', 'name', 'atlet', 'peserta']
 
-        const diff = e1.length - maxData;
-        for (let i = 0; i < diff; i++) {
-          e1.every((e, index) => {
-            const same2 = this.findDuplicates(e.Club, e2)
-            if (!same2) {
-              e2.push(e1[index]);
-              e1.splice(index, 1);
-              return false;
+      for (let i = headerIdx + 1; i < rows.length; i++) {
+        const row = rows[i]
+        const isEmpty = !row || row.every(cell => cell === undefined || cell === null || String(cell).trim() === "")
+        
+        if (isEmpty) {
+          if (hasStacked && currentPlayers.length > 0) {
+            categories.push({
+              categoryName: currentCategoryName,
+              players: [...currentPlayers]
+            })
+            currentPlayers = []
+          }
+          continue
+        }
+        
+        if (hasStacked) {
+          const nonEntries = row.filter(cell => cell !== undefined && cell !== null && String(cell).trim() !== "")
+          if (nonEntries.length === 1 && isNaN(String(nonEntries[0]).trim())) {
+            if (currentPlayers.length > 0) {
+              categories.push({
+                categoryName: currentCategoryName,
+                players: [...currentPlayers]
+              })
+              currentPlayers = []
             }
-            return true;
+            currentCategoryName = `${sheetName} - ${String(nonEntries[0]).trim()}`
+            continue
+          }
+        }
+        
+        const nama = row[nameColIdx] ? String(row[nameColIdx]).trim() : ''
+        const club = row[clubColIdx] ? String(row[clubColIdx]).trim() : ''
+        
+        if (nama && !nameKeywords.some(kw => nama.toLowerCase().includes(kw))) {
+          currentPlayers.push({
+            Nama: nama,
+            Club: club || 'Tanpa Club'
           })
         }
-
-        this.tableLeft = e1
-        this.tableRight = e2
-        this.staticDataLeft = e1
-        this.staticDataRight = e2
-      }, 100)
+      }
+      
+      if (currentPlayers.length > 0) {
+        categories.push({
+          categoryName: currentCategoryName,
+          players: currentPlayers
+        })
+      }
+      
+      return categories
     },
-
+    selectCategory(index) {
+      this.selectedCategoryIndex = index
+      const cat = this.parsedCategories[index]
+      if (cat) {
+        this.category = cat.categoryName
+        this.distributePlayersToTables(cat.players)
+      }
+    },
+    distributePlayersToTables(players) {
+      const e1 = []
+      const e2 = []
+      const maxData = Math.ceil(players.length / 2)
+      
+      players.forEach((e) => {
+        if (e.Club) {
+          const same = this.findDuplicates(e.Club, e1)
+          const same2 = this.findDuplicates(e.Club, e2)
+          if (same) {
+            e2.push(e)
+          } else if (e1.length >= maxData) {
+            if (same2) {
+              e1.push(e)
+            } else {
+              e2.push(e)
+            }
+          } else {
+            e1.push(e)
+          }
+          
+          if (same && same2) {
+            this.notif = true
+            this.notifColor = 'error'
+            this.notifMsg = e.Club + ' More than 2'
+          }
+        }
+      })
+      
+      const diff = e1.length - maxData
+      for (let i = 0; i < diff; i++) {
+        e1.every((e, index) => {
+          const same2 = this.findDuplicates(e.Club, e2)
+          if (!same2) {
+            e2.push(e1[index])
+            e1.splice(index, 1)
+            return false
+          }
+          return true
+        })
+      }
+      
+      this.tableLeft = e1
+      this.tableRight = e2
+      this.staticDataLeft = e1
+      this.staticDataRight = e2
+    },
     findDuplicates(data, arr) {
       if (data !== '') {
         return arr.find((item) => {

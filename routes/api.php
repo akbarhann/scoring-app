@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('/import-chart', [ImportChart::class, 'import'])->name('import_chart');
+Route::post('/parse-recipe', [ImportChart::class, 'parseRecipe'])->name('parse_recipe');
 Route::get('/martial', [ItemSelect::class, 'martial'])->name('martial');
 Route::get('/tournament', [ItemSelect::class, 'tournament'])->name('tournament');
 Route::get('/category', [ItemSelect::class, 'category'])->name('category');

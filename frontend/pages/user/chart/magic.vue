@@ -1265,44 +1265,19 @@ export default {
         this.notifMsg = 'Gagal membaca berkas untuk Smart Import.'
       }
       reader.onload = (e) => {
-        // Gunakan setTimeout agar browser memiliki waktu untuk menggambar spinner loading pada tombol
         setTimeout(() => {
           try {
             const data = e.target.result
-            const workbook = XLSX.read(data, { type: 'binary' })
+            const workbook = XLSX.read(data, { type: 'array' })
 
             const detectedAgeGroups = []
             const detectedWeightMapPutra = new Map()
             const detectedWeightMapPutri = new Map()
             const detectedMatchTypes = new Set()
             const allAthletes = []
-            const matchTypeKeywords = ['newaza', 'fighting', 'show system', 'show', 'system', 'randori', 'kata']
 
-            const ageGroupSheets = workbook.SheetNames.filter((sheetName) => {
-              return /^[Uu][-\s]?\d+$/.test(sheetName.trim()) || /^SS$/i.test(sheetName.trim())
-            })
-
-            workbook.SheetNames.forEach((sheetName) => {
-              const ageMatch = sheetName.match(/^[Uu][-\s]?(\d+)$/)
-              if (ageMatch) {
-                const maxAge = parseInt(ageMatch[1])
-                const name = `U${maxAge}`
-                if (!detectedAgeGroups.find(g => g.name === name)) {
-                  detectedAgeGroups.push({ name, maxAge })
-                }
-              }
-            })
-
-            detectedAgeGroups.sort((a, b) => a.maxAge - b.maxAge)
-            const finalAgeGroups = detectedAgeGroups.map((g, i) => ({
-              name: g.name,
-              min: i === 0 ? 0 : detectedAgeGroups[i - 1].maxAge + 1,
-              max: g.maxAge,
-            }))
-
-            // Proses pemindaian sheet secara asinkron agar browser tidak freeze ("Not Responding")
-            const processSheetAsync = (index) => {
-              if (index >= ageGroupSheets.length) {
+            const processSheetAsync = async (index) => {
+              if (index >= workbook.SheetNames.length) {
                 const sortedWeightsPutra = Array.from(detectedWeightMapPutra.entries()).sort((a, b) => a[0] - b[0])
                 const finalWeightClassesPutra = sortedWeightsPutra.map(([num, { isPlus }], i) => ({
                   name: isPlus ? `+${num}` : `-${num}`,
@@ -1315,6 +1290,13 @@ export default {
                   name: isPlus ? `+${num}` : `-${num}`,
                   min: i === 0 ? 0 : sortedWeightsPutri[i - 1][0],
                   max: num,
+                }))
+
+                detectedAgeGroups.sort((a, b) => a.maxAge - b.maxAge)
+                const finalAgeGroups = detectedAgeGroups.map((g, i) => ({
+                  name: g.name,
+                  min: i === 0 ? 0 : detectedAgeGroups[i - 1].maxAge + 1,
+                  max: g.maxAge,
                 }))
 
                 const finalMatchTypes = Array.from(detectedMatchTypes).filter(Boolean)
@@ -1341,106 +1323,30 @@ export default {
                 return
               }
 
-              const sheetName = ageGroupSheets[index]
+              const sheetName = workbook.SheetNames[index]
               const worksheet = workbook.Sheets[sheetName]
-              const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' })
+              const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' })
 
-              const ageMatch = sheetName.match(/^[Uu][-\s]?(\d+)$/)
-              const sheetMaxAge = ageMatch ? parseInt(ageMatch[1]) : null
+              const cropped = this.cropEmptyMarginsJS(rawRows)
+              if (cropped.length === 0) {
+                setTimeout(() => {
+                  processSheetAsync(index + 1)
+                }, 10)
+                return
+              }
 
-              const colIndices = { no: -1, name: -1, gender: -1, age: -1, weight: -1, weightClass: -1, matchType: -1, club: -1 }
-
-              rows.forEach((row) => {
-                if (!row || row.length === 0) return
-
-                const rowStr = row.map(cell => String(cell).toLowerCase().trim())
-                const isHeader = rowStr.includes('no') && rowStr.some(c => c.includes('nama'))
-
-                if (isHeader) {
-                  rowStr.forEach((cell, idx) => {
-                    if (cell === 'no') colIndices.no = idx
-                    else if (cell.includes('nama')) colIndices.name = idx
-                    else if (cell.includes('jenis kelamin') || cell === 'gender' || cell === 'jk') colIndices.gender = idx
-                    else if (cell === 'usia' || cell === 'umur') colIndices.age = idx
-                    else if (cell === 'berat badan' || cell === 'berat' || cell === 'bb') colIndices.weight = idx
-                    else if (cell === 'kelas') colIndices.weightClass = idx
-                    else if (cell === 'kategori' || cell.includes('nomor')) colIndices.matchType = idx
-                    else if (cell.includes('dojo') || cell.includes('klub') || cell.includes('club') || cell.includes('kontingen')) colIndices.club = idx
-                  })
-                  return
+              const preview = cropped.slice(0, 15)
+              try {
+                const response = await this.$axios.$post('/api/parse-recipe', { preview })
+                if (response.status === 'success') {
+                  const recipe = response.recipe
+                  this.parseSheetWithRecipe(cropped, sheetName, recipe, detectedAgeGroups, detectedWeightMapPutra, detectedWeightMapPutri, detectedMatchTypes, allAthletes)
                 }
+              } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error('Gagal analisis AI untuk sheet ' + sheetName, err)
+              }
 
-                if (colIndices.name !== -1) {
-                  const rawName = row[colIndices.name] ? String(row[colIndices.name]).trim() : ''
-                  if (!rawName || rawName.toUpperCase().startsWith('ATLET KATEGORI') || rawName.toUpperCase() === 'NAMA') return
-
-                  const rawGender = colIndices.gender !== -1 ? String(row[colIndices.gender] || '') : ''
-                  let genderVal = 'Putra'
-                  if (rawGender.toLowerCase().includes('putri') || rawGender.toLowerCase() === 'p') genderVal = 'Putri'
-
-                  if (colIndices.weightClass !== -1) {
-                    const wcRaw = String(row[colIndices.weightClass] || '').trim()
-                    if (wcRaw) {
-                      const isPlus = wcRaw.includes('+')
-                      const num = parseFloat(wcRaw.replace(/[^0-9.]/g, ''))
-                      if (!isNaN(num) && num > 0) {
-                        if (genderVal === 'Putra') {
-                          if (!detectedWeightMapPutra.has(num)) {
-                            detectedWeightMapPutra.set(num, { label: wcRaw, isPlus })
-                          }
-                        } else if (!detectedWeightMapPutri.has(num)) {
-                          detectedWeightMapPutri.set(num, { label: wcRaw, isPlus })
-                        }
-                      }
-                    }
-                  }
-
-                  if (colIndices.matchType !== -1) {
-                    const mtRaw = String(row[colIndices.matchType] || '').trim()
-                    if (mtRaw) {
-                      const mtLower = mtRaw.toLowerCase()
-                      const isValidMatchType = matchTypeKeywords.some(kw => mtLower.includes(kw))
-                      if (isValidMatchType) {
-                        detectedMatchTypes.add(mtRaw.toUpperCase())
-                      }
-                    }
-                  }
-
-                  const rawAge = colIndices.age !== -1 ? String(row[colIndices.age] || '') : ''
-                  const rawWeightClass = colIndices.weightClass !== -1 ? String(row[colIndices.weightClass] || '') : ''
-                  const rawMatchType = colIndices.matchType !== -1 ? String(row[colIndices.matchType] || '') : ''
-                  const rawClub = colIndices.club !== -1 ? String(row[colIndices.club] || '') : ''
-
-                  let weightVal = 60
-                  const wStr = rawWeightClass.replace(',', '.')
-                  const wMatch = wStr.match(/[0-9.]+/)
-                  if (wMatch) weightVal = parseFloat(wMatch[0]) || 60
-
-                  let ageVal = 20
-                  if (sheetMaxAge !== null) {
-                    ageVal = sheetMaxAge
-                  } else {
-                    const ageNum = parseInt(rawAge.replace(/[^0-9]/g, ''))
-                    if (!isNaN(ageNum) && ageNum > 0) ageVal = ageNum
-                  }
-
-                  let athleteMT = rawMatchType.trim()
-                  const mtLower = athleteMT.toLowerCase()
-                  const isValid = matchTypeKeywords.some(kw => mtLower.includes(kw))
-                  if (!isValid) athleteMT = ''
-
-                  allAthletes.push({
-                    name: rawName,
-                    club: rawClub,
-                    gender: genderVal,
-                    age: ageVal,
-                    weight: weightVal,
-                    matchType: athleteMT,
-                  })
-                }
-              })
-
-              // Berikan jeda 10ms ke event loop browser untuk menjaga UI tetap responsif (mencegah freeze)
               setTimeout(() => {
                 processSheetAsync(index + 1)
               }, 10)
@@ -1459,7 +1365,143 @@ export default {
           }
         }, 50)
       }
-      reader.readAsBinaryString(activeFile)
+      reader.readAsArrayBuffer(activeFile)
+    },
+
+    cropEmptyMarginsJS(rows) {
+      if (!rows || rows.length === 0) return []
+      
+      let firstValidCol = rows[0].length
+      rows.forEach((row) => {
+        for (let c = 0; c < row.length; c++) {
+          if (row[c] !== undefined && row[c] !== null && String(row[c]).trim() !== "") {
+            if (c < firstValidCol) {
+              firstValidCol = c
+            }
+          }
+        }
+      })
+      
+      if (firstValidCol === rows[0].length) return []
+      
+      const croppedCols = rows.map(row => row.slice(firstValidCol))
+      
+      let firstValidRow = -1
+      for (let r = 0; r < croppedCols.length; r++) {
+        const hasData = croppedCols[r].some(cell => cell !== undefined && cell !== null && String(cell).trim() !== "")
+        if (hasData) {
+          firstValidRow = r
+          break
+        }
+      }
+      
+      if (firstValidRow === -1) return []
+      
+      return croppedCols.slice(firstValidRow)
+    },
+
+    parseSheetWithRecipe(rows, sheetName, recipe, detectedAgeGroups, detectedWeightMapPutra, detectedWeightMapPutri, detectedMatchTypes, allAthletes) {
+      const headerIdx = recipe.header_row_index
+      const nameColIdx = recipe.column_mapping.name_column_index
+      const clubColIdx = recipe.column_mapping.club_column_index
+      const genderColIdx = recipe.column_mapping.gender_column_index
+      const ageColIdx = recipe.column_mapping.age_column_index
+      const weightColIdx = recipe.column_mapping.weight_column_index
+      const matchTypeColIdx = recipe.column_mapping.match_type_column_index
+      const hasStacked = recipe.segmentation && recipe.segmentation.has_stacked_tables
+      
+      let currentCategoryName = sheetName
+      
+      const ageMatch = sheetName.match(/^[Uu][-\s]?(\d+)$/)
+      const sheetMaxAge = ageMatch ? parseInt(ageMatch[1]) : null
+      
+      if (sheetMaxAge) {
+        const name = `U${sheetMaxAge}`
+        if (!detectedAgeGroups.find(g => g.name === name)) {
+          detectedAgeGroups.push({ name, maxAge: sheetMaxAge })
+        }
+      }
+
+      for (let i = headerIdx + 1; i < rows.length; i++) {
+        const row = rows[i]
+        const isEmpty = !row || row.every(cell => cell === undefined || cell === null || String(cell).trim() === "")
+        
+        if (isEmpty) {
+          continue
+        }
+        
+        if (hasStacked) {
+          const nonEntries = row.filter(cell => cell !== undefined && cell !== null && String(cell).trim() !== "")
+          if (nonEntries.length === 1 && isNaN(String(nonEntries[0]).trim())) {
+            currentCategoryName = `${sheetName} - ${String(nonEntries[0]).trim()}`
+            continue
+          }
+        }
+        
+        const name = nameColIdx !== -1 && row[nameColIdx] ? String(row[nameColIdx]).trim() : ""
+        if (!name || name.toLowerCase() === "nama" || name.toLowerCase().includes("atlet kategori")) {
+          continue
+        }
+        
+        const club = clubColIdx !== -1 && row[clubColIdx] ? String(row[clubColIdx]).trim() : "Tanpa Club"
+        
+        let genderVal = "Putra"
+        if (genderColIdx !== -1 && row[genderColIdx]) {
+          const gStr = String(row[genderColIdx]).toLowerCase()
+          if (gStr.includes("putri") || gStr === "p" || gStr === "female" || gStr.includes("perempuan")) {
+            genderVal = "Putri"
+          }
+        }
+        
+        let ageVal = 20
+        if (sheetMaxAge !== null) {
+          ageVal = sheetMaxAge
+        } else if (ageColIdx !== -1 && row[ageColIdx]) {
+          const ageNum = parseInt(String(row[ageColIdx]).replace(/[^0-9]/g, ''))
+          if (!isNaN(ageNum) && ageNum > 0) ageVal = ageNum
+        }
+        
+        let weightVal = 60
+        let wcRaw = ""
+        if (weightColIdx !== -1 && row[weightColIdx]) {
+          wcRaw = String(row[weightColIdx]).trim()
+          const wStr = wcRaw.replace(',', '.')
+          const wMatch = wStr.match(/[0-9.]+/)
+          if (wMatch) {
+            weightVal = parseFloat(wMatch[0]) || 60
+          }
+        }
+        
+        if (wcRaw) {
+          const isPlus = wcRaw.includes('+')
+          if (genderVal === 'Putra') {
+            if (!detectedWeightMapPutra.has(weightVal)) {
+              detectedWeightMapPutra.set(weightVal, { label: wcRaw, isPlus })
+            }
+          } else if (!detectedWeightMapPutri.has(weightVal)) {
+            detectedWeightMapPutri.set(weightVal, { label: wcRaw, isPlus })
+          }
+        }
+        
+        let matchTypeVal = currentCategoryName
+        if (matchTypeColIdx !== -1 && row[matchTypeColIdx]) {
+          const mtRaw = String(row[matchTypeColIdx]).trim()
+          if (mtRaw) {
+            matchTypeVal = mtRaw.toUpperCase()
+          }
+        }
+        
+        detectedMatchTypes.add(matchTypeVal.toUpperCase())
+        
+        allAthletes.push({
+          name,
+          club,
+          gender: genderVal,
+          age: ageVal,
+          weight: weightVal,
+          matchType: matchTypeVal.toUpperCase()
+        })
+      }
     },
 
     confirmSmartImport() {
