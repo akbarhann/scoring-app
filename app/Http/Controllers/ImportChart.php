@@ -141,7 +141,7 @@ class ImportChart extends Controller
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Content-Type' => 'application/json',
                 ])->post('https://api.groq.com/openai/v1/chat/completions', [
-                    'model' => 'llama-3.3-70b-versatile',
+                    'model' => 'qwen/qwen3-32b',
                     'messages' => [
                         ['role' => 'system', 'content' => $systemPrompt],
                         ['role' => 'user', 'content' => "Here is the JSON preview of the Excel worksheet:\n\n" . json_encode($request->preview, JSON_PRETTY_PRINT)]
