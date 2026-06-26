@@ -1383,8 +1383,6 @@ export default {
                     min: i === 0 ? 0 : detectedAgeGroups[i - 1].maxAge + 1,
                     max: g.maxAge,
                   }))
-                } else {
-                  finalAgeGroups = this.rules.ageGroups.map(g => ({ ...g }))
                 }
 
                 const finalMatchTypes = Array.from(detectedMatchTypes).filter(Boolean)
@@ -1598,7 +1596,7 @@ export default {
       const p = this.smartImportPreview
 
       // Apply detected configuration
-      if (p.ageGroups.length > 0) this.rules.ageGroups = p.ageGroups.map(g => ({ ...g }))
+      this.rules.ageGroups = p.ageGroups.map(g => ({ ...g }))
       
       // Apply weight classes for Putra and Putri
       if (p.weightClassesPutra.length > 0) this.rules.weightClassesPutra = p.weightClassesPutra.map(w => ({ ...w }))
@@ -1990,7 +1988,8 @@ export default {
         )
         const weightClassName = matchedWeight ? matchedWeight.name : `${athlete.weight} kg`
 
-        const finalCategoryName = `${matchedType} ${genderClean} ${ageGroupName} ${weightClassName}`
+        const agePart = this.rules.ageGroups.length > 0 ? ` ${ageGroupName}` : ''
+        const finalCategoryName = `${matchedType} ${genderClean}${agePart} ${weightClassName}`
 
         if (!categoriesMap[finalCategoryName]) {
           categoriesMap[finalCategoryName] = []
