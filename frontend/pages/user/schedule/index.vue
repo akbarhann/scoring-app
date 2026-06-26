@@ -149,6 +149,7 @@
 export default {
   name: 'SchedulePage',
   layout: 'dashboard',
+  middleware: 'login',
   data() {
     return {
       martial: null,

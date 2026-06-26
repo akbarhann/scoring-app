@@ -35,8 +35,10 @@
 <script>
 export default {
   name: 'LandingPage',
-  middleware({ redirect }) {
-    return redirect('/user/dashboard')
+  middleware({ redirect, app }) {
+    if (app.$cookies.get('user_auth')) {
+      return redirect('/user/dashboard')
+    }
   },
   data() {
     return {

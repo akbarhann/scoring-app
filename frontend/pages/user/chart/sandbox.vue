@@ -486,7 +486,31 @@
                   <v-chip v-else color="error" x-small class="font-weight-semi">Kurang</v-chip>
                 </td>
                 <td class="text-center py-2">
-                  <v-btn x-small color="primary" class="rounded-8" @click="openAthletesList(cat)">Detail</v-btn>
+                  <div class="d-flex align-center justify-center" style="gap: 8px;">
+                    <v-btn x-small color="primary" class="rounded-8" @click="openAthletesList(cat)">Detail</v-btn>
+                    
+                    <!-- Tombol Split Pool (jika peserta > 4 dan nama kategori tidak mengandung '(Pool ') -->
+                    <v-btn
+                      v-if="cat.athletes.length > 4 && !cat.categoryName.includes('(Pool ')"
+                      x-small
+                      color="teal darken-2"
+                      class="rounded-8 white--text"
+                      @click="splitCategory(cat)"
+                    >
+                      <v-icon left x-small>mdi-call-split</v-icon> Bagi Pool
+                    </v-btn>
+                    
+                    <!-- Tombol Gabung Pool (jika nama kategori mengandung '(Pool ') -->
+                    <v-btn
+                      v-if="cat.categoryName.includes('(Pool ')"
+                      x-small
+                      color="amber darken-3"
+                      class="rounded-8 white--text"
+                      @click="mergeCategory(cat)"
+                    >
+                      <v-icon left x-small>mdi-call-merge</v-icon> Gabung
+                    </v-btn>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -1328,6 +1352,63 @@ export default {
       this.rawAthletes.splice(index, 1)
       this.processAutoGrouping()
       this.generateAllBrackets()
+    },
+
+    splitCategory(category) {
+      if (!category || category.athletes.length <= 4) return
+
+      const athletesInCat = [...category.athletes]
+      const N = athletesInCat.length
+      const P = Math.ceil(N / 4) // Jumlah pool yang dibutuhkan
+
+      athletesInCat.forEach((ath, idx) => {
+        // Cari referensi asli atlet di rawAthletes
+        const rawAth = this.rawAthletes.find((a) => a === ath)
+        if (rawAth) {
+          // Hapus suffix Pool yang ada sebelumnya untuk menghindari duplikasi
+          const cleanType = rawAth.matchType.replace(/\s*\(Pool [A-Z]\)/g, '')
+          
+          // Tentukan label pool (Pool A, B, C, dst.) berdasarkan indeks berselang-seling
+          const poolIndex = idx % P
+          const poolLetter = String.fromCharCode(65 + poolIndex) // 65 adalah ASCII 'A'
+          const suffix = ` (Pool ${poolLetter})`
+          
+          rawAth.matchType = cleanType + suffix
+        }
+      })
+
+      // Re-simulasi & gambar ulang bagan
+      this.processAutoGrouping()
+      this.generateAllBrackets()
+
+      this.notif = true
+      this.notifColor = 'success'
+      this.notifMsg = `Kategori "${category.categoryName}" berhasil dibagi menjadi ${P} Pool!`
+    },
+
+    mergeCategory(category) {
+      if (!category) return
+
+      // Deteksi nama kategori dasar (tanpa suffix Pool A/B/C/D)
+      const cleanCategoryName = category.categoryName.replace(/\s*\(Pool [A-Z]\)/g, '')
+      
+      // Ambil pola matchType asli sebelum di-split
+      const baseMatchTypePattern = category.categoryName.replace(/\s*\(Pool [A-Z]\).*/g, '')
+
+      this.rawAthletes.forEach((ath) => {
+        if (ath.matchType.startsWith(baseMatchTypePattern)) {
+          // Kembalikan ke matchType dasar
+          ath.matchType = ath.matchType.replace(/\s*\(Pool [A-Z]\)/g, '')
+        }
+      })
+
+      // Re-simulasi & gambar ulang bagan
+      this.processAutoGrouping()
+      this.generateAllBrackets()
+
+      this.notif = true;
+      this.notifColor = 'success'
+      this.notifMsg = `Semua Pool berhasil digabungkan kembali menjadi "${cleanCategoryName}"!`
     },
 
     smartImport(file) {

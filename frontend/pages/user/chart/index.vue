@@ -434,6 +434,7 @@ export default {
     [process.client && 'Bracket']: () => import('vue-tournament-bracket'),
   },
   layout: 'dashboard',
+  middleware: 'login',
   data() {
     return {
       martial: null,

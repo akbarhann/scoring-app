@@ -143,6 +143,7 @@ export default {
     draggable
   },
   layout: 'dashboard',
+  middleware: 'login',
   data() {
     return {
       waitingListName: '',

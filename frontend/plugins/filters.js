@@ -1,9 +1,6 @@
 import Vue from 'vue'
 
 export default ({ app }) => {
-  if (process.client && !app.$cookies.get('user_auth')) {
-    app.$cookies.set('user_auth', 'admin_dev')
-  }
 
   Vue.filter('timeFormat', function (value) {
     const minute = Math.floor(value / 60)
