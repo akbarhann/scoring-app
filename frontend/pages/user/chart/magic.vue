@@ -1375,12 +1375,17 @@ export default {
                   max: num,
                 }))
 
-                detectedAgeGroups.sort((a, b) => a.maxAge - b.maxAge)
-                const finalAgeGroups = detectedAgeGroups.map((g, i) => ({
-                  name: g.name,
-                  min: i === 0 ? 0 : detectedAgeGroups[i - 1].maxAge + 1,
-                  max: g.maxAge,
-                }))
+                let finalAgeGroups = []
+                if (detectedAgeGroups.length > 0) {
+                  detectedAgeGroups.sort((a, b) => a.maxAge - b.maxAge)
+                  finalAgeGroups = detectedAgeGroups.map((g, i) => ({
+                    name: g.name,
+                    min: i === 0 ? 0 : detectedAgeGroups[i - 1].maxAge + 1,
+                    max: g.maxAge,
+                  }))
+                } else {
+                  finalAgeGroups = this.rules.ageGroups.map(g => ({ ...g }))
+                }
 
                 const finalMatchTypes = Array.from(detectedMatchTypes).filter(Boolean)
 
