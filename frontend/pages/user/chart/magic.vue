@@ -68,7 +68,7 @@
         <v-row class="px-6 pt-6">
           
           <!-- Column 1: Nomor Tanding -->
-          <v-col cols="12" md="3" class="d-flex flex-column">
+          <v-col cols="12" sm="6" lg="3" class="d-flex flex-column">
             <div class="rules-card-panel">
               <div class="rules-card-header">
                 <v-icon small color="primaryred" class="mr-2">mdi-sword-cross</v-icon>
@@ -107,7 +107,7 @@
           </v-col>
 
           <!-- Column 2: Kelompok Usia -->
-          <v-col cols="12" md="3" class="d-flex flex-column">
+          <v-col cols="12" sm="6" lg="3" class="d-flex flex-column">
             <div class="rules-card-panel">
               <div class="rules-card-header">
                 <v-icon small color="primaryred" class="mr-2">mdi-account-group-outline</v-icon>
@@ -165,7 +165,7 @@
           </v-col>
 
           <!-- Column 3: Kelas Berat Putra -->
-          <v-col cols="12" md="3" class="d-flex flex-column">
+          <v-col cols="12" sm="6" lg="3" class="d-flex flex-column">
             <div class="rules-card-panel">
               <div class="rules-card-header">
                 <v-icon small color="primaryred" class="mr-2">mdi-gender-male</v-icon>
@@ -223,7 +223,7 @@
           </v-col>
 
           <!-- Column 4: Kelas Berat Putri -->
-          <v-col cols="12" md="3" class="d-flex flex-column">
+          <v-col cols="12" sm="6" lg="3" class="d-flex flex-column">
             <div class="rules-card-panel">
               <div class="rules-card-header">
                 <v-icon small color="primaryred" class="mr-2">mdi-gender-female</v-icon>
@@ -2653,8 +2653,13 @@ export default {
 .rules-card-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 10px;
+}
+
+.rules-card-row >>> .v-input:not(.rules-input-num) {
+  flex: 1 1 auto;
+  min-width: 60px;
 }
 
 .rules-card-row:last-child {
@@ -2702,7 +2707,7 @@ export default {
 }
 
 .rules-input-num {
-  max-width: 72px !important;
+  max-width: 48px !important;
 }
 
 .rules-card-row >>> .v-btn--icon.v-size--x-small {
