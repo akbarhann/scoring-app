@@ -79,21 +79,23 @@
                   Belum ada nomor pertandingan.
                 </div>
                 <div v-else>
-                  <div v-for="(rule, idx) in rules.matchTypes" :key="'mt-' + idx" class="rules-card-row">
-                    <v-text-field
-                      v-model="rules.matchTypes[idx]"
-                      dense outlined hide-details
-                      placeholder="Nama nomor tanding"
-                      dark
-                    ></v-text-field>
-                    <v-btn
-                      icon x-small
-                      color="rgba(255,255,255,0.3)"
-                      :disabled="rules.matchTypes.length <= 1"
-                      @click="removeMatchTypeRule(idx)"
-                    >
-                      <v-icon size="14">mdi-close</v-icon>
-                    </v-btn>
+                  <div v-for="(rule, idx) in rules.matchTypes" :key="'mt-' + idx" class="rules-card-item">
+                    <div class="d-flex align-center" style="gap: 8px;">
+                      <v-text-field
+                        v-model="rules.matchTypes[idx]"
+                        dense outlined hide-details
+                        placeholder="Nama nomor tanding"
+                        dark
+                      ></v-text-field>
+                      <v-btn
+                        icon x-small
+                        color="rgba(255,255,255,0.3)"
+                        :disabled="rules.matchTypes.length <= 1"
+                        @click="removeMatchTypeRule(idx)"
+                      >
+                        <v-icon size="14">mdi-close</v-icon>
+                      </v-btn>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -118,40 +120,45 @@
                   Belum ada kelompok usia.
                 </div>
                 <div v-else>
-                  <div v-for="(rule, idx) in rules.ageGroups" :key="'ag-' + idx" class="rules-card-row">
-                    <v-text-field
-                      v-model="rule.name"
-                      dense outlined hide-details
-                      placeholder="Nama (cth: U18)"
-                      dark
-                    ></v-text-field>
-                    
-                    <div class="rules-range-box">
+                  <div v-for="(rule, idx) in rules.ageGroups" :key="'ag-' + idx" class="rules-card-item">
+                    <!-- Row 1: Name Input + Close Button -->
+                    <div class="d-flex align-center" style="gap: 8px;">
                       <v-text-field
-                        v-model.number="rule.min"
-                        type="number" dense outlined hide-details
-                        placeholder="Min"
+                        v-model="rule.name"
+                        dense outlined hide-details
+                        placeholder="Nama (cth: U18)"
                         dark
-                        class="rules-input-num"
                       ></v-text-field>
-                      <span class="rules-range-sep">-</span>
-                      <v-text-field
-                        v-model.number="rule.max"
-                        type="number" dense outlined hide-details
-                        placeholder="Max"
-                        dark
-                        class="rules-input-num"
-                      ></v-text-field>
+                      <v-btn
+                        icon x-small
+                        color="rgba(255,255,255,0.3)"
+                        :disabled="rules.ageGroups.length <= 1"
+                        @click="removeAgeRule(idx)"
+                      >
+                        <v-icon size="14">mdi-close</v-icon>
+                      </v-btn>
                     </div>
-
-                    <v-btn
-                      icon x-small
-                      color="rgba(255,255,255,0.3)"
-                      :disabled="rules.ageGroups.length <= 1"
-                      @click="removeAgeRule(idx)"
-                    >
-                      <v-icon size="14">mdi-close</v-icon>
-                    </v-btn>
+                    <!-- Row 2: Range Input -->
+                    <div class="d-flex align-center mt-2" style="gap: 8px;">
+                      <span class="text-11 grey--text" style="white-space: nowrap; min-width: 50px;">Rentang:</span>
+                      <div class="rules-range-box flex-grow-1">
+                        <v-text-field
+                          v-model.number="rule.min"
+                          type="number" dense outlined hide-details
+                          placeholder="Min"
+                          dark
+                          class="rules-input-num"
+                        ></v-text-field>
+                        <span class="rules-range-sep">s/d</span>
+                        <v-text-field
+                          v-model.number="rule.max"
+                          type="number" dense outlined hide-details
+                          placeholder="Max"
+                          dark
+                          class="rules-input-num"
+                        ></v-text-field>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -176,40 +183,45 @@
                   Belum ada kelas berat badan.
                 </div>
                 <div v-else>
-                  <div v-for="(rule, idx) in rules.weightClassesPutra" :key="'wcp-' + idx" class="rules-card-row">
-                    <v-text-field
-                      v-model="rule.name"
-                      dense outlined hide-details
-                      placeholder="Nama (cth: Kelas A)"
-                      dark
-                    ></v-text-field>
-                    
-                    <div class="rules-range-box">
+                  <div v-for="(rule, idx) in rules.weightClassesPutra" :key="'wcp-' + idx" class="rules-card-item">
+                    <!-- Row 1: Name Input + Close Button -->
+                    <div class="d-flex align-center" style="gap: 8px;">
                       <v-text-field
-                        v-model.number="rule.min"
-                        type="number" dense outlined hide-details
-                        placeholder="Min"
+                        v-model="rule.name"
+                        dense outlined hide-details
+                        placeholder="Nama (cth: Kelas A)"
                         dark
-                        class="rules-input-num"
                       ></v-text-field>
-                      <span class="rules-range-sep">-</span>
-                      <v-text-field
-                        v-model.number="rule.max"
-                        type="number" dense outlined hide-details
-                        placeholder="Max"
-                        dark
-                        class="rules-input-num"
-                      ></v-text-field>
+                      <v-btn
+                        icon x-small
+                        color="rgba(255,255,255,0.3)"
+                        :disabled="rules.weightClassesPutra.length <= 1"
+                        @click="removeWeightRulePutra(idx)"
+                      >
+                        <v-icon size="14">mdi-close</v-icon>
+                      </v-btn>
                     </div>
-
-                    <v-btn
-                      icon x-small
-                      color="rgba(255,255,255,0.3)"
-                      :disabled="rules.weightClassesPutra.length <= 1"
-                      @click="removeWeightRulePutra(idx)"
-                    >
-                      <v-icon size="14">mdi-close</v-icon>
-                    </v-btn>
+                    <!-- Row 2: Range Input -->
+                    <div class="d-flex align-center mt-2" style="gap: 8px;">
+                      <span class="text-11 grey--text" style="white-space: nowrap; min-width: 50px;">Rentang:</span>
+                      <div class="rules-range-box flex-grow-1">
+                        <v-text-field
+                          v-model.number="rule.min"
+                          type="number" dense outlined hide-details
+                          placeholder="Min"
+                          dark
+                          class="rules-input-num"
+                        ></v-text-field>
+                        <span class="rules-range-sep">s/d</span>
+                        <v-text-field
+                          v-model.number="rule.max"
+                          type="number" dense outlined hide-details
+                          placeholder="Max"
+                          dark
+                          class="rules-input-num"
+                        ></v-text-field>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -234,40 +246,45 @@
                   Belum ada kelas berat badan.
                 </div>
                 <div v-else>
-                  <div v-for="(rule, idx) in rules.weightClassesPutri" :key="'wcpw-' + idx" class="rules-card-row">
-                    <v-text-field
-                      v-model="rule.name"
-                      dense outlined hide-details
-                      placeholder="Nama (cth: Kelas A)"
-                      dark
-                    ></v-text-field>
-                    
-                    <div class="rules-range-box">
+                  <div v-for="(rule, idx) in rules.weightClassesPutri" :key="'wcpw-' + idx" class="rules-card-item">
+                    <!-- Row 1: Name Input + Close Button -->
+                    <div class="d-flex align-center" style="gap: 8px;">
                       <v-text-field
-                        v-model.number="rule.min"
-                        type="number" dense outlined hide-details
-                        placeholder="Min"
+                        v-model="rule.name"
+                        dense outlined hide-details
+                        placeholder="Nama (cth: Kelas A)"
                         dark
-                        class="rules-input-num"
                       ></v-text-field>
-                      <span class="rules-range-sep">-</span>
-                      <v-text-field
-                        v-model.number="rule.max"
-                        type="number" dense outlined hide-details
-                        placeholder="Max"
-                        dark
-                        class="rules-input-num"
-                      ></v-text-field>
+                      <v-btn
+                        icon x-small
+                        color="rgba(255,255,255,0.3)"
+                        :disabled="rules.weightClassesPutri.length <= 1"
+                        @click="removeWeightRulePutri(idx)"
+                      >
+                        <v-icon size="14">mdi-close</v-icon>
+                      </v-btn>
                     </div>
-
-                    <v-btn
-                      icon x-small
-                      color="rgba(255,255,255,0.3)"
-                      :disabled="rules.weightClassesPutri.length <= 1"
-                      @click="removeWeightRulePutri(idx)"
-                    >
-                      <v-icon size="14">mdi-close</v-icon>
-                    </v-btn>
+                    <!-- Row 2: Range Input -->
+                    <div class="d-flex align-center mt-2" style="gap: 8px;">
+                      <span class="text-11 grey--text" style="white-space: nowrap; min-width: 50px;">Rentang:</span>
+                      <div class="rules-range-box flex-grow-1">
+                        <v-text-field
+                          v-model.number="rule.min"
+                          type="number" dense outlined hide-details
+                          placeholder="Min"
+                          dark
+                          class="rules-input-num"
+                        ></v-text-field>
+                        <span class="rules-range-sep">s/d</span>
+                        <v-text-field
+                          v-model.number="rule.max"
+                          type="number" dense outlined hide-details
+                          placeholder="Max"
+                          dark
+                          class="rules-input-num"
+                        ></v-text-field>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2692,20 +2709,20 @@ export default {
   background: rgba(255, 255, 255, 0.15);
 }
 
-.rules-card-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
+.rules-card-item {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 12px;
 }
 
-.rules-card-row >>> .v-input:not(.rules-input-num) {
-  flex: 1 1 auto;
-  min-width: 60px;
-}
-
-.rules-card-row:last-child {
+.rules-card-item:last-child {
   margin-bottom: 0;
+}
+
+.rules-card-item >>> .v-input:not(.rules-input-num) {
+  flex: 1 1 auto;
 }
 
 /* Range input group wrapper */
@@ -2713,7 +2730,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.01);
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 6px;
   padding: 2px;
@@ -2721,9 +2738,10 @@ export default {
 
 .rules-range-sep {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.35);
   font-weight: 600;
   user-select: none;
+  padding: 0 4px;
 }
 
 /* Inputs styling override */
@@ -2749,24 +2767,25 @@ export default {
 }
 
 .rules-input-num {
-  max-width: 54px !important;
+  flex-grow: 1;
+  max-width: none !important;
 }
 
-.rules-card-row >>> .v-btn--icon.v-size--x-small {
-  width: 24px !important;
-  height: 24px !important;
-  min-width: 24px !important;
+.rules-card-item >>> .v-btn--icon.v-size--x-small {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
   margin-left: 2px !important;
 }
 
 .rules-input-num >>> .v-input__slot {
-  padding: 0 2px !important;
+  padding: 0 4px !important;
 }
 
 .rules-card-body >>> .rules-input-num input {
   text-align: center !important;
   padding: 6px 0 !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 /* Hide spin-buttons for range inputs */
