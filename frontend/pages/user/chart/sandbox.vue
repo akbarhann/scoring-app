@@ -2749,7 +2749,7 @@ export default {
 }
 
 .rules-input-num {
-  max-width: 48px !important;
+  max-width: 54px !important;
 }
 
 .rules-card-row >>> .v-btn--icon.v-size--x-small {
@@ -2760,12 +2760,13 @@ export default {
 }
 
 .rules-input-num >>> .v-input__slot {
-  padding: 0 4px !important;
+  padding: 0 2px !important;
 }
 
-.rules-input-num >>> input {
+.rules-card-body >>> .rules-input-num input {
   text-align: center !important;
   padding: 6px 0 !important;
+  font-size: 11px !important;
 }
 
 /* Hide spin-buttons for range inputs */
