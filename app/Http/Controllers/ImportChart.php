@@ -127,6 +127,8 @@ class ImportChart extends Controller
             . "Determine:\n"
             . "1. Which row index is the table header (the row containing column names like 'nama', 'club', 'atlet', 'klub', etc.)?\n"
             . "2. What are the column indexes for the athlete's name, club, gender, age, weight, and match type/category? If a column is missing, set its index to -1.\n"
+            . "   CRITICAL: For club_column_index, look for headers like 'dojo', 'club', 'klub', 'kontingen', 'sekolah', 'instansi', 'utusan', 'daerah', 'tim', or 'asal'.\n"
+            . "   CRITICAL negative constraint: NEVER map an Address/Alamat column (headers containing 'alamat', 'ktp', 'kk', 'jalan', 'jl', 'rt', 'rw', 'domisili', 'kecamatan', 'kabupaten', 'kota', 'provinsi') to the club_column_index. Address columns usually contain street/home address details and must NOT be used as the club/dojo.\n"
             . "3. Does the sheet contain vertically stacked tables (sub-categories within the sheet separated by titles or empty rows)? If yes, set 'has_stacked_tables' to true, and specify how to detect the sub-category title row index or pattern.\n\n"
             . "Return strictly a JSON object matching this schema:\n"
             . "{\n"

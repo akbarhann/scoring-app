@@ -1895,7 +1895,7 @@ export default {
                   else if (cell.includes('usia') || cell.includes('umur') || cell.includes('lahir') || cell.includes('dob')) colIndices.age = idx
                   else if (cell.includes('berat') || cell.includes('bb') || cell.includes('weight') || cell.includes('kg')) colIndices.weight = idx
                   else if (cell.includes('kategori') || cell.includes('nomor') || cell.includes('match') || cell.includes('kelas')) colIndices.matchType = idx
-                  else if (cell.includes('dojo') || cell.includes('klub') || cell.includes('club') || cell.includes('kontingen') || cell.includes('instansi')) colIndices.club = idx
+                  else if ((cell.includes('dojo') || cell.includes('klub') || cell.includes('club') || cell.includes('kontingen') || cell.includes('instansi') || cell.includes('sekolah') || cell.includes('utusan') || cell.includes('tim') || cell.includes('asal') || cell.includes('daerah')) && !(cell.includes('alamat') || cell.includes('ktp') || cell.includes('kk') || cell.includes('jalan') || cell.includes('domisili') || cell.includes('kecamatan') || cell.includes('kabupaten') || cell.includes('kota'))) colIndices.club = idx
                 })
                 return // skip header row itself
               }
