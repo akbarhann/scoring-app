@@ -64,11 +64,11 @@
     <div class="print-hide mb-6">
       <div class="card-dashboard pb-6">
         
-        <!-- Beautiful 3-column Card Panel Grid -->
+        <!-- Beautiful 4-column Card Panel Grid -->
         <v-row class="px-6 pt-6">
           
           <!-- Column 1: Nomor Tanding -->
-          <v-col cols="12" md="4" class="d-flex flex-column">
+          <v-col cols="12" md="3" class="d-flex flex-column">
             <div class="rules-card-panel">
               <div class="rules-card-header">
                 <v-icon small color="primaryred" class="mr-2">mdi-sword-cross</v-icon>
@@ -107,7 +107,7 @@
           </v-col>
 
           <!-- Column 2: Kelompok Usia -->
-          <v-col cols="12" md="4" class="d-flex flex-column">
+          <v-col cols="12" md="3" class="d-flex flex-column">
             <div class="rules-card-panel">
               <div class="rules-card-header">
                 <v-icon small color="primaryred" class="mr-2">mdi-account-group-outline</v-icon>
@@ -164,19 +164,19 @@
             </div>
           </v-col>
 
-          <!-- Column 3: Kelas Berat -->
-          <v-col cols="12" md="4" class="d-flex flex-column">
+          <!-- Column 3: Kelas Berat Putra -->
+          <v-col cols="12" md="3" class="d-flex flex-column">
             <div class="rules-card-panel">
               <div class="rules-card-header">
-                <v-icon small color="primaryred" class="mr-2">mdi-weight-kilogram</v-icon>
-                <span class="rules-card-title">Kelas Berat Badan</span>
+                <v-icon small color="primaryred" class="mr-2">mdi-gender-male</v-icon>
+                <span class="rules-card-title">Kelas Berat Putra</span>
               </div>
               <div class="rules-card-body">
-                <div v-if="rules.weightClasses.length === 0" class="text-center py-8 grey--text text-13">
+                <div v-if="rules.weightClassesPutra.length === 0" class="text-center py-8 grey--text text-13">
                   Belum ada kelas berat badan.
                 </div>
                 <div v-else>
-                  <div v-for="(rule, idx) in rules.weightClasses" :key="'wc-' + idx" class="rules-card-row">
+                  <div v-for="(rule, idx) in rules.weightClassesPutra" :key="'wcp-' + idx" class="rules-card-row">
                     <v-text-field
                       v-model="rule.name"
                       dense outlined hide-details
@@ -205,8 +205,8 @@
                     <v-btn
                       icon x-small
                       color="rgba(255,255,255,0.3)"
-                      :disabled="rules.weightClasses.length <= 1"
-                      @click="removeWeightRule(idx)"
+                      :disabled="rules.weightClassesPutra.length <= 1"
+                      @click="removeWeightRulePutra(idx)"
                     >
                       <v-icon size="14">mdi-close</v-icon>
                     </v-btn>
@@ -214,7 +214,65 @@
                 </div>
               </div>
               <div class="rules-card-footer">
-                <button class="rules-add-btn" @click="addWeightRule()">
+                <button class="rules-add-btn" @click="addWeightRulePutra()">
+                  <v-icon x-small color="primaryred">mdi-plus</v-icon>
+                  Tambah Berat
+                </button>
+              </div>
+            </div>
+          </v-col>
+
+          <!-- Column 4: Kelas Berat Putri -->
+          <v-col cols="12" md="3" class="d-flex flex-column">
+            <div class="rules-card-panel">
+              <div class="rules-card-header">
+                <v-icon small color="primaryred" class="mr-2">mdi-gender-female</v-icon>
+                <span class="rules-card-title">Kelas Berat Putri</span>
+              </div>
+              <div class="rules-card-body">
+                <div v-if="rules.weightClassesPutri.length === 0" class="text-center py-8 grey--text text-13">
+                  Belum ada kelas berat badan.
+                </div>
+                <div v-else>
+                  <div v-for="(rule, idx) in rules.weightClassesPutri" :key="'wcpw-' + idx" class="rules-card-row">
+                    <v-text-field
+                      v-model="rule.name"
+                      dense outlined hide-details
+                      placeholder="Nama (cth: Kelas A)"
+                      dark
+                    ></v-text-field>
+                    
+                    <div class="rules-range-box">
+                      <v-text-field
+                        v-model.number="rule.min"
+                        type="number" dense outlined hide-details
+                        placeholder="Min"
+                        dark
+                        class="rules-input-num"
+                      ></v-text-field>
+                      <span class="rules-range-sep">-</span>
+                      <v-text-field
+                        v-model.number="rule.max"
+                        type="number" dense outlined hide-details
+                        placeholder="Max"
+                        dark
+                        class="rules-input-num"
+                      ></v-text-field>
+                    </div>
+
+                    <v-btn
+                      icon x-small
+                      color="rgba(255,255,255,0.3)"
+                      :disabled="rules.weightClassesPutri.length <= 1"
+                      @click="removeWeightRulePutri(idx)"
+                    >
+                      <v-icon size="14">mdi-close</v-icon>
+                    </v-btn>
+                  </div>
+                </div>
+              </div>
+              <div class="rules-card-footer">
+                <button class="rules-add-btn" @click="addWeightRulePutri()">
                   <v-icon x-small color="primaryred">mdi-plus</v-icon>
                   Tambah Berat
                 </button>
@@ -1031,11 +1089,19 @@ export default {
           { name: 'U21', min: 18, max: 20 },
           { name: 'Senior', min: 21, max: 99 },
         ],
-        weightClasses: [
-          { name: 'Kelas A', min: 50, max: 55 },
-          { name: 'Kelas -62', min: 56, max: 62 },
+        weightClassesPutra: [
+          { name: 'Kelas -56', min: 0, max: 56 },
+          { name: 'Kelas -62', min: 57, max: 62 },
           { name: 'Kelas -69', min: 63, max: 69 },
-          { name: 'Featherweight', min: 70, max: 77 },
+          { name: 'Kelas -77', min: 70, max: 77 },
+          { name: 'Kelas +77', min: 78, max: 200 },
+        ],
+        weightClassesPutri: [
+          { name: 'Kelas -49', min: 0, max: 49 },
+          { name: 'Kelas -55', min: 50, max: 55 },
+          { name: 'Kelas -62', min: 56, max: 62 },
+          { name: 'Kelas -70', min: 63, max: 70 },
+          { name: 'Kelas +70', min: 71, max: 200 },
         ],
       },
 
@@ -1479,20 +1545,9 @@ export default {
       // Apply detected configuration
       if (p.ageGroups.length > 0) this.rules.ageGroups = p.ageGroups.map(g => ({ ...g }))
       
-      // Merge weight classes from Putra and Putri
-      const mergedWeightClasses = []
-      const seenNames = new Set()
-      const addClasses = (classes) => {
-        classes.forEach(w => {
-          if (!seenNames.has(w.name)) {
-            seenNames.add(w.name)
-            mergedWeightClasses.push({ ...w })
-          }
-        })
-      }
-      addClasses(p.weightClassesPutra)
-      addClasses(p.weightClassesPutri)
-      if (mergedWeightClasses.length > 0) this.rules.weightClasses = mergedWeightClasses
+      // Apply weight classes for Putra and Putri
+      if (p.weightClassesPutra.length > 0) this.rules.weightClassesPutra = p.weightClassesPutra.map(w => ({ ...w }))
+      if (p.weightClassesPutri.length > 0) this.rules.weightClassesPutri = p.weightClassesPutri.map(w => ({ ...w }))
 
       if (p.matchTypes.length > 0) this.rules.matchTypes = [...p.matchTypes]
 
@@ -1600,7 +1655,8 @@ export default {
         ['Genders', 'Putra, Putri'],
         ['Nomor Tanding', this.rules.matchTypes.filter((t) => t.trim() !== '').join(', ')],
         ['Kelompok Usia', this.rules.ageGroups.map((g) => `${g.name} (${g.min}-${g.max} tahun)`).join(', ')],
-        ['Kelas Berat (kg)', this.rules.weightClasses.map((w) => `${w.name} (${w.min}-${w.max} kg)`).join(', ')],
+        ['Kelas Berat Putra (kg)', this.rules.weightClassesPutra.map((w) => `${w.name} (${w.min}-${w.max} kg)`).join(', ')],
+        ['Kelas Berat Putri (kg)', this.rules.weightClassesPutri.map((w) => `${w.name} (${w.min}-${w.max} kg)`).join(', ')],
       ]
       const wsRules = XLSX.utils.aoa_to_sheet([ruleHeaders, ...ruleRows])
       XLSX.utils.book_append_sheet(wb, wsRules, 'Panduan Aturan')
@@ -1639,11 +1695,17 @@ export default {
     removeAgeRule(idx) {
       this.rules.ageGroups.splice(idx, 1)
     },
-    addWeightRule() {
-      this.rules.weightClasses.push({ name: '', min: 0, max: 200 })
+    addWeightRulePutra() {
+      this.rules.weightClassesPutra.push({ name: '', min: 0, max: 200 })
     },
-    removeWeightRule(idx) {
-      this.rules.weightClasses.splice(idx, 1)
+    removeWeightRulePutra(idx) {
+      this.rules.weightClassesPutra.splice(idx, 1)
+    },
+    addWeightRulePutri() {
+      this.rules.weightClassesPutri.push({ name: '', min: 0, max: 200 })
+    },
+    removeWeightRulePutri(idx) {
+      this.rules.weightClassesPutri.splice(idx, 1)
     },
 
     getDataFromExcel(file) {
@@ -1785,8 +1847,8 @@ export default {
           
           // Clean gender
           let genderVal = 'Putra'
-          const rawGenderStr = row[mappings.gender] ? String(row[mappings.gender]).toLowerCase() : ''
-          if (rawGenderStr.includes('putri') || rawGenderStr === 'p' || rawGenderStr.includes('female') || rawGenderStr.includes('wanita')) {
+          const rawGenderStr = row[mappings.gender] ? String(row[mappings.gender]).toLowerCase().trim() : ''
+          if (rawGenderStr.includes('putri') || rawGenderStr === 'p' || rawGenderStr.includes('female') || rawGenderStr.includes('wanita') || rawGenderStr.includes('perempuan')) {
             genderVal = 'Putri'
           }
           
@@ -1933,14 +1995,15 @@ export default {
           (t) => t.toLowerCase() === athlete.matchType.toLowerCase()
         ) || athlete.matchType
 
-        const genderClean = athlete.gender.toLowerCase().includes('putri') ? 'Putri' : 'Putra'
+        const genderClean = athlete.gender.toLowerCase().includes('putri') || athlete.gender.toLowerCase().includes('perempuan') ? 'Putri' : 'Putra'
 
         const matchedAge = this.rules.ageGroups.find(
           (g) => athlete.age >= g.min && athlete.age <= g.max
         )
         const ageGroupName = matchedAge ? matchedAge.name : 'Usia Bebas'
 
-        const matchedWeight = this.rules.weightClasses.find(
+        const weightRules = genderClean === 'Putri' ? this.rules.weightClassesPutri : this.rules.weightClassesPutra
+        const matchedWeight = weightRules.find(
           (w) => athlete.weight >= w.min && athlete.weight <= w.max
         )
         const weightClassName = matchedWeight ? matchedWeight.name : `${athlete.weight} kg`
@@ -2542,7 +2605,7 @@ export default {
 /* ── Container ─────────────────────────────── */
 .sandbox-container {
   font-family: 'Poppins', sans-serif;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0;
 }
@@ -2561,7 +2624,7 @@ export default {
 
 /* ── Card — identical to dashboard card-dashboard ── */
 .card-sandbox {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), #121212;
   box-shadow: 11px 11px 62px 7px #000000, -11px -11px 51px 1px rgba(48, 48, 48, 0.54);
