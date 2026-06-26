@@ -89,11 +89,28 @@ class ImportChart extends Controller
             'preview' => 'required|array',
         ]);
 
-        $keysString = env('GROQ_API_KEYS', '');
-        $apiKeys = array_filter(array_map('trim', explode(',', $keysString)));
-        if (empty($apiKeys)) {
-            $apiKeys = [env('GROQ_API_KEY')];
+        $apiKeys = [];
+        for ($k = 1; $k <= 20; $k++) {
+            $keyVal = env("GROQ_API_KEY{$k}");
+            if (!empty($keyVal)) {
+                $apiKeys[] = trim($keyVal);
+            }
         }
+
+        if (empty($apiKeys)) {
+            $keysString = env('GROQ_API_KEYS', '');
+            if (!empty($keysString)) {
+                $apiKeys = array_filter(array_map('trim', explode(',', $keysString)));
+            }
+        }
+
+        if (empty($apiKeys)) {
+            $singleKey = env('GROQ_API_KEY');
+            if (!empty($singleKey)) {
+                $apiKeys[] = trim($singleKey);
+            }
+        }
+
 
         if (empty($apiKeys[0])) {
             return Response::json([
